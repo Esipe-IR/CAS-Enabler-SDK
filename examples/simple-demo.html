@@ -1,75 +1,40 @@
 <html>
     <head>
         <title>Simple SDK Demo</title>
+
+        <style>
+            .cas {
+                background: #EB5B0C;
+                padding: 10px 15px;
+                color: white;
+                border: none;
+                border-radius: 2px;
+                cursor: pointer;
+            }
+        </style>
     </head>
     <body>
-        <button onclick="success();">Example success</button>
-        <button onclick="nonexistent();">Example nonexistent service</button>
+        <button class="cas" onclick="sdk.connect();">Connect with UPEM</button>
 
-        <button onclick="sdk.auth();">Auth</button>
-        <button onclick="sdk.token();">Token</button>
-        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jschannel/1.0.0-git-commit1-8c4f7eb/jschannel.min.js"></script>
         <script src="../sdk.js"></script>
         <script>
-            function handleError(response) {
-                alert(response.error);
-
-                switch (response.code) {
-                    case 1:
-                        //Handle not connected
-                        break;
-                    case 2:
-                        //Handle nonexistent service
-                        break;
-                    case 3:
-                        //Handle unallowed service
-                        break;
-                    case 4:
-                        //Handle fatal error token
-                        break;
-                    default:
-                        break;
+            function callback(jwt) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'simple-demo.php?jwt=' + jwt);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                        console.log("usr = ", xhr.responseText);
+                    }
                 }
-            }
-
-            function callback(response) {
-                console.log(response);
-
-                if (!response.status) {
-                    return handleError(response);
-                }
-
-                alert("Receive the token");
-            }
-
-            function success() {
-                alert("Start a working example");
-
-                var validConfig = {
-                    uid: "acf2feb0-05a4-11e7-93ae-92361f002671"
-                };
-
-                sdk.setConfig(validConfig);
-                sdk.token();
-            }
-
-            function nonexistent() {
-                alert("Start nonexistent service example");
-
-                var invalidConfig = {
-                    uid: "unknown"
-                };
-
-                sdk.setConfig(invalidConfig);
-                sdk.token();
+                xhr.send(null);
             }
 
             var config = {
-                baseUrl: "https://perso-etudiant.u-pem.fr/~vrasquie/cas",
+                iframe: "casIframe",
                 callbackName: "callback",
                 callbackFn: callback,
-                isJsonp: true,
-                debug: true
+                uid: "b9d24419-1ab7-474a-bf97-ec1637ee5f8e" //uid of your service
             };
 
             var sdk = new CASEnablerSDK(config);

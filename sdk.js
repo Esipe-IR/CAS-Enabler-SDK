@@ -1,25 +1,5 @@
 var CASEnablerSDK = function(userconfig) {
-    var defaultconfig = {
-        baseUrl: null,
-        uid: null,
-        callbackName: "cas_callback",
-        callbackFn: this._callback,
-        isJsonp: false,
-        popupHeight: 200,
-        popupWidth: 700,
-        debug: false
-    };
-
-    this.$config = Object.assign(defaultconfig, userconfig);
-    window[this.$config.callbackName] = this.$config.callbackFn;
-
-    if (this.$config.debug) {
-        this._debug("Init", this.$config);
-    }
-}
-
-CASEnablerSDK.prototype._debug = function _debug(action, extra) {
-    console.log("CASEnabler SDK - Action: " + action + ";", extra);
+    this._initConfig(userconfig);
 }
 
 CASEnablerSDK.prototype.setConfig = function setConfig(config) {
@@ -31,54 +11,42 @@ CASEnablerSDK.prototype.setConfig = function setConfig(config) {
     }
 }
 
-CASEnablerSDK.prototype.auth = function auth() {
-    var uri = "/auth";
-    this._popup(this.$config.baseUrl + uri, "CAS Authenticator");
+CASEnablerSDK.prototype.connect = function connect() {
+    var url = this.$config.baseUrl + "/service/" + this.$config.uid + "/connect";
+    var win = this._popup(url, "CAS Authenticator");
+
+    var chan = Channel.build({
+        window: win,
+        origin: "*",
+        scope: "CAS.Scope"
+    });
+
+    var self = this;
+    chan.bind("connect", function(transaction, token) {
+        self.$config.callbackFn(token);
+    
+        return 1;
+    });
 }
 
-CASEnablerSDK.prototype.token = function token() {
-    var url = this.$config.baseUrl + "/api/service/" + this.$config.uid + "/token";
+CASEnablerSDK.prototype._initConfig = function _initConfig(userconfig) {
+    var defaultconfig = {
+        baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
+        uid: null,
+        callbackName: "callback",
+        callbackFn: function() {},
+        popupHeight: 400,
+        popupWidth: 800,
+        debug: false,
+        iframe: "casIframe"
+    };
 
-    if (this.$config.isJsonp) {
-        return this._jsonp(url);
-    }
-
-    return this._ajax(url);
-}
-
-CASEnablerSDK.prototype.verify = function verify(token) {
-    var url = this.$config.url + "/api/service/" + this.$config.uid + "/token/" + token;
-
-    if (this.$config.isJsonp) {
-        return this._jsonp(url);
-    }
-
-    return this._ajax(url);
-}
-
-CASEnablerSDK.prototype._callback = function _callback(response) {
-    alert("Got a callback");
-    console.log(response);
-}
-
-CASEnablerSDK.prototype._jsonp = function _jsonp(url) {
-    url = url + "?callback=" + this.$config.callbackName;
+    this.$config = Object.assign(defaultconfig, userconfig);
+    window[this.$config.callbackName] = this.$config.callbackFn;
 
     if (this.$config.debug) {
-        this._debug("Call jsonp", url);
+        this._debug("Init Config", this.$config);
     }
-
-    var s = document.createElement('script');
-    s.setAttribute('src', url);
-    document.body.appendChild(s);
-}
-
-CASEnablerSDK.prototype._ajax = function _ajax(url) {
-    if (this.$config.debug) {
-        this._debug("Call jsonp", url);
-    }
-
-    //TODO: Ajax
 }
 
 CASEnablerSDK.prototype._popup = function _popup(url, title) {
@@ -100,4 +68,10 @@ CASEnablerSDK.prototype._popup = function _popup(url, title) {
     if (window.focus) {
         newWindow.focus();
     }
+
+    return newWindow;
+}
+
+CASEnablerSDK.prototype._debug = function _debug(action, extra) {
+    console.log("CASEnabler SDK - Action: " + action + ";", extra);
 }
