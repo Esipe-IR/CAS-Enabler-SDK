@@ -1,56 +1,59 @@
-var CASEnablerSDK = function($url, $uid, $options) {
-    this.$url = $url;
-    this.$uid = $uid;
-    this.$options = $options;
-
-    this._init();
-}
-
-CASEnablerSDK.prototype._debug = function _debug(action, extra) {
-    console.log("CASEnabler SDK - Action: " + action + ";", extra);
-}
-
-CASEnablerSDK.prototype._init = function _init() {
-    var options = Object.assign({
+var CASEnablerSDK = function(userconfig) {
+    var defaultconfig = {
+        baseUrl: null,
+        uid: null,
         callbackName: "cas_callback",
         callbackFn: this._callback,
         isJsonp: false,
         popupHeight: 200,
         popupWidth: 700,
         debug: false
-    }, this.$options);
+    };
 
-    this.$options = options;
-    window[this.$options.callbackName] = this.$options.callbackFn;
+    this.$config = Object.assign(defaultconfig, userconfig);
+    window[this.$config.callbackName] = this.$config.callbackFn;
 
-    if (this.$options.debug) {
-        this._debug("Set options", this.$options);
+    if (this.$config.debug) {
+        this._debug("Init", this.$config);
+    }
+}
+
+CASEnablerSDK.prototype._debug = function _debug(action, extra) {
+    console.log("CASEnabler SDK - Action: " + action + ";", extra);
+}
+
+CASEnablerSDK.prototype.setConfig = function setConfig(config) {
+    this.$config = Object.assign(this.$config, config);
+    window[this.$config.callbackName] = this.$config.callbackFn;
+
+    if (this.$config.debug) {
+        this._debug("Set config", this.$config);
     }
 }
 
 CASEnablerSDK.prototype.auth = function auth() {
     var uri = "/auth";
-    this._popup(this.$url + uri, "CAS Authenticator");
+    this._popup(this.$config.baseUrl + uri, "CAS Authenticator");
 }
 
 CASEnablerSDK.prototype.token = function token() {
-    var uri = "/api/service/" + this.$uid + "/token";
+    var url = this.$config.baseUrl + "/api/service/" + this.$config.uid + "/token";
 
-    if (this.$options.isJsonp) {
-        return this._jsonp(uri);
+    if (this.$config.isJsonp) {
+        return this._jsonp(url);
     }
 
-    return this._ajax(uri);
+    return this._ajax(url);
 }
 
 CASEnablerSDK.prototype.verify = function verify(token) {
-    var uri = "/api/service/" + this.$uid + "/token/" + token;
+    var url = this.$config.url + "/api/service/" + this.$config.uid + "/token/" + token;
 
-    if (this.$options.isJsonp) {
-        return this._jsonp(uri);
+    if (this.$config.isJsonp) {
+        return this._jsonp(url);
     }
 
-    return this._ajax(uri);
+    return this._ajax(url);
 }
 
 CASEnablerSDK.prototype._callback = function _callback(response) {
@@ -58,10 +61,10 @@ CASEnablerSDK.prototype._callback = function _callback(response) {
     console.log(response);
 }
 
-CASEnablerSDK.prototype._jsonp = function _jsonp(uri) {
-    var url = this.$url + uri + "?callback=" + this.$options.callbackName;
+CASEnablerSDK.prototype._jsonp = function _jsonp(url) {
+    url = url + "?callback=" + this.$config.callbackName;
 
-    if (this.$options.debug) {
+    if (this.$config.debug) {
         this._debug("Call jsonp", url);
     }
 
@@ -70,10 +73,8 @@ CASEnablerSDK.prototype._jsonp = function _jsonp(uri) {
     document.body.appendChild(s);
 }
 
-CASEnablerSDK.prototype._ajax = function _ajax(uri) {
-    var url = this.$url + uri;
-
-    if (this.$options.debug) {
+CASEnablerSDK.prototype._ajax = function _ajax(url) {
+    if (this.$config.debug) {
         this._debug("Call jsonp", url);
     }
 
@@ -87,13 +88,13 @@ CASEnablerSDK.prototype._popup = function _popup(url, title) {
     var width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
     var height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
 
-    var left = ((width / 2) - (this.$options.popupWidth / 2)) + dualScreenLeft;
-    var top = ((height / 2) - (this.$options.popupHeight / 2)) + dualScreenTop;
+    var left = ((width / 2) - (this.$config.popupWidth / 2)) + dualScreenLeft;
+    var top = ((height / 2) - (this.$config.popupHeight / 2)) + dualScreenTop;
 
     var newWindow = window.open(
         url, 
         title, 
-        'scrollbars=yes, width=' + this.$options.popupWidth + ', height=' + this.$options.popupHeight + ', top=' + top + ', left=' + left
+        'scrollbars=yes, width=' + this.$config.popupWidth + ', height=' + this.$config.popupHeight + ', top=' + top + ', left=' + left
     );
 
     if (window.focus) {

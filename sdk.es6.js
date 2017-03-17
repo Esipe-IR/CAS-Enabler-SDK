@@ -1,67 +1,71 @@
 export default class CASEnablerSDK {
-    constructor() {
-        this.$url = $url;
-        this.$uid = $uid;
-        this.$options = $options;
-
-        this._init();
-    }
-
-    _debug(action, extra) {
-        console.log("CASEnabler SDK - Action: " + action + ";", extra);
-    }
-
-    _init() {
-        var options = Object.assign({
+    constructor(userconfig) {
+        var defaultconfig = {
+            baseUrl: null,
+            uid: null,
             callbackName: "cas_callback",
             callbackFn: this._callback,
             isJsonp: false,
             popupHeight: 200,
             popupWidth: 700,
             debug: false
-        }, this.$options);
+        };
 
-        this.$options = options;
-        window[this.$options.callbackName] = this.$options.callbackFn;
+        this.$config = Object.assign(defaultconfig, userconfig);
+        window[this.$config.callbackName] = this.$config.callbackFn;
 
-        if (this.$options.debug) {
-            this._debug("Set options", this.$options);
+        if (this.$config.debug) {
+            this._debug("Init", this.$config);
+        }
+    }
+
+    _debug(action, extra) {
+        console.log("CASEnabler SDK - Action: " + action + ";", extra);
+    }
+
+    setConfig(config) {
+        this.$config = Object.assign(this.$config, config);
+        window[this.$config.callbackName] = this.$config.callbackFn;
+
+        if (this.$config.debug) {
+            this._debug("Set config", this.$config);
         }
     }
 
     auth() {
         var uri = "/auth";
-        this._popup(this.$url + uri, "CAS Authenticator");
+        this._popup(this.$config.baseUrl + uri, "CAS Authenticator");
     }
 
     token() {
-        var uri = "/api/service/" + this.$uid + "/token";
+        var url = this.$config.baseUrl + "/api/service/" + this.$config.uid + "/token";
 
-        if (this.$options.isJsonp) {
-            return this._jsonp(uri);
+        if (this.$config.isJsonp) {
+            return this._jsonp(url);
         }
 
-        return this._ajax(uri);
+        return this._ajax(url);
     }
 
     verify(token) {
-        var uri = "/api/service/" + this.$uid + "/token/" + token;
+        var url = this.$config.url + "/api/service/" + this.$config.uid + "/token/" + token;
 
-        if (this.$options.isJsonp) {
-            return this._jsonp(uri);
+        if (this.$config.isJsonp) {
+            return this._jsonp(url);
         }
 
-        return this._ajax(uri);
+        return this._ajax(url);
     }
 
     _callback(response) {
+        alert("Got a callback");
         console.log(response);
     }
 
     _jsonp(uri) {
-        var url = this.$url + uri + "?callback=" + this.$options.callbackName;
+        url = url + "?callback=" + this.$config.callbackName;
 
-        if (this.$options.debug) {
+        if (this.$config.debug) {
             this._debug("Call jsonp", url);
         }
 
@@ -70,11 +74,9 @@ export default class CASEnablerSDK {
         document.body.appendChild(s);
     }
 
-    _ajax(uri) {
-        var url = this.$url + uri;
-
-        if (this.$options.debug) {
-            this._debug("Call ajax", url);
+    _ajax(url) {
+        if (this.$config.debug) {
+            this._debug("Call jsonp", url);
         }
 
         //TODO: Ajax
@@ -87,13 +89,13 @@ export default class CASEnablerSDK {
         var width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
         var height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
 
-        var left = ((width / 2) - (this.$options.popupWidth / 2)) + dualScreenLeft;
-        var top = ((height / 2) - (this.$options.popupHeight / 2)) + dualScreenTop;
+        var left = ((width / 2) - (this.$config.popupWidth / 2)) + dualScreenLeft;
+        var top = ((height / 2) - (this.$config.popupHeight / 2)) + dualScreenTop;
 
         var newWindow = window.open(
             url,
             title,
-            'scrollbars=yes, width=' + this.$options.popupWidth + ', height=' + this.$options.popupHeight + ', top=' + top + ', left=' + left
+            'scrollbars=yes, width=' + this.$config.popupWidth + ', height=' + this.$config.popupHeight + ', top=' + top + ', left=' + left
         );
 
         if (window.focus) {
