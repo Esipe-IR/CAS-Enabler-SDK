@@ -4,13 +4,13 @@
     use Firebase\JWT\JWT;
 
     //UID of the service
-    $uid = "b9d24419-1ab7-474a-bf97-ec1637ee5f8e";
+    $uid = "54f96312-d287-47e8-8113-15dbcd19f533";
 
     //Json Web Token
     $jwt = $_GET["jwt"];
 
     //Check if jwt is valid one
-    $json = file_get_contents("http://localhost/CAS-Enabler/web/app_dev.php/~vrasquie/cas/api/service/$uid/token/$jwt");
+    $json = file_get_contents("http://perso-etudiant.u-pem.fr/~vrasquie/cas/api/service/$uid/token/$jwt");
     $result = json_decode($json, true);
 
     if ($result["status"] && !$result["code"]) {
@@ -23,6 +23,7 @@
             $jwt = JWT::decode($jwt, $publicKey, array('RS256'));
         } catch (Exception $e) {
             //Should never append if you verify token but in case of ...
+            echo(json_encode(array($e->getMessage())));
             return;
         }
 
@@ -33,6 +34,9 @@
         $success = openssl_public_decrypt($usrCrypt, $usrJson, $publicKey);
 
         if ($success) {
-            echo $usrJson;
+            echo($usrJson);
+            return;
         }
     }
+
+    echo($result);

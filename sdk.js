@@ -27,6 +27,26 @@ CASEnablerSDK.prototype.connect = function connect() {
     
         return 1;
     });
+
+    chan.bind("error", function(transaction, error) {
+        if (!self.$config.debug) {
+            return 1;
+        }
+
+        switch (error) {
+            case "2":
+                console.log("Nonexistent service");
+                break;
+            case "4":
+                console.log("Fatal error token");
+                break;
+            default:
+                console.log("Unknown error", error);
+                break;
+        }
+
+        return 1;
+    });
 }
 
 CASEnablerSDK.prototype._initConfig = function _initConfig(userconfig) {
@@ -37,8 +57,7 @@ CASEnablerSDK.prototype._initConfig = function _initConfig(userconfig) {
         callbackFn: function() {},
         popupHeight: 400,
         popupWidth: 800,
-        debug: false,
-        iframe: "casIframe"
+        debug: false
     };
 
     this.$config = Object.assign(defaultconfig, userconfig);
