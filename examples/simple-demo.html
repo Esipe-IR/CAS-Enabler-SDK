@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title>Simple SDK Demo</title>
+    </head>
+    <body>
+        <button onclick="sdk.auth();">Auth</button>
+        <button onclick="sdk.token();">Token</button>
+        
+        <script src="../sdk.js"></script>
+        <script>
+            var url = "https://perso-etudiant.u-pem.fr/~vrasquie/cas";
+            var uid = "acf2feb0-05a4-11e7-93ae-92361f002671";
+            var options = {
+                isJsonp: true,
+                debug: true
+            };
+
+            var sdk = new CASEnablerSDK(url, uid, options);
+        </script>
+    </body>
+</html>

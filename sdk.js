@@ -1,4 +1,4 @@
-var CASEnbalerSDK = function($url, $uid, $options) {
+var CASEnablerSDK = function($url, $uid, $options) {
     this.$url = $url;
     this.$uid = $uid;
     this.$options = $options;
@@ -6,22 +6,31 @@ var CASEnbalerSDK = function($url, $uid, $options) {
     this._init();
 }
 
-CASEnbalerSDK.prototype.init = function init() {
+CASEnablerSDK.prototype._debug = function _debug(action, extra) {
+    console.log("CASEnabler SDK - Action: " + action + ";", extra);
+}
+
+CASEnablerSDK.prototype._init = function _init() {
     var options = Object.assign({
         callbackName: "cas_callback",
         callbackFn: this._callback,
         isJsonp: false,
         popupHeight: 200,
-        popupWidth: 700
+        popupWidth: 700,
+        debug: false
     }, this.$options);
 
     this.$options = options;
     window[this.$options.callbackName] = this.$options.callbackFn;
+
+    if (this.$options.debug) {
+        this._debug("Set options", this.$options);
+    }
 }
 
-CASEnbalerSDK.prototype.auth = function auth() {
+CASEnablerSDK.prototype.auth = function auth() {
     var uri = "/auth";
-    this._popup(this.url + uri, "CAS Authenticator");
+    this._popup(this.$url + uri, "CAS Authenticator");
 }
 
 CASEnablerSDK.prototype.token = function token() {
@@ -34,7 +43,7 @@ CASEnablerSDK.prototype.token = function token() {
     return this._ajax(uri);
 }
 
-CASEnbalerSDK.prototype.verify = function verify(token) {
+CASEnablerSDK.prototype.verify = function verify(token) {
     var uri = "/api/service/" + this.$uid + "/token/" + token;
 
     if (this.$options.isJsonp) {
@@ -44,39 +53,34 @@ CASEnbalerSDK.prototype.verify = function verify(token) {
     return this._ajax(uri);
 }
 
-CASEnbalerSDK.prototype._callback = function _callback(response) {
-    if (!response.status && response.code === 1) {
-        return this.error("NOT::CONNECTED");
-    }
-
-    if (!data.status && data.code === 3) {
-        return this.error("NOT::ALLOWED");
-    }
-
-    if (data.status) {
-        var serviceData = JSON.parse(data.data);
-
-        if (this.options["callbackFn"] && typeof this.options["callbackFn"] === "function") {
-            this.options['callbackFn'](serviceData);
-        }
-    }
-
-    return this.error("UNDEFINED");
+CASEnablerSDK.prototype._callback = function _callback(response) {
+    alert("Got a callback");
+    console.log(response);
 }
 
-CASEnbalerSDK.prototype._jsonp = function _jsonp(uri) {
-    var url = this.url + uri + "?callback=" + this.$callbackName;
+CASEnablerSDK.prototype._jsonp = function _jsonp(uri) {
+    var url = this.$url + uri + "?callback=" + this.$options.callbackName;
 
-    //TODO: jsonp
+    if (this.$options.debug) {
+        this._debug("Call jsonp", url);
+    }
+
+    var s = document.createElement('script');
+    s.setAttribute('src', url);
+    document.body.appendChild(s);
 }
 
-CASEnbalerSDK.prototype._ajax = function _ajax(uri) {
-    var url = this.url + uri;
+CASEnablerSDK.prototype._ajax = function _ajax(uri) {
+    var url = this.$url + uri;
+
+    if (this.$options.debug) {
+        this._debug("Call jsonp", url);
+    }
 
     //TODO: Ajax
 }
 
-CASEnbalerSDK.prototype._popup = function _popup(url, title) {
+CASEnablerSDK.prototype._popup = function _popup(url, title) {
     var dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : screen.left;
     var dualScreenTop = window.screenTop !== undefined ? window.screenTop : screen.top;
 
