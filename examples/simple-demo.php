@@ -10,7 +10,7 @@
     $jwt = $_GET["jwt"];
 
     //Check if jwt is valid one
-    $json = file_get_contents("http://perso-etudiant.u-pem.fr/~vrasquie/cas/api/service/$uid/token/$jwt");
+    $json = file_get_contents("http://perso-etudiant.u-pem.fr/~vrasquie/cas/service/$uid/token/$jwt");
     $result = json_decode($json, true);
 
     if ($result["status"] && !$result["code"]) {
