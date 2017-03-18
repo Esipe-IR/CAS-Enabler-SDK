@@ -1,42 +1,39 @@
 <?php
-    require("vendor/autoload.php");
-    
-    use Firebase\JWT\JWT;
 
-    //UID of the service
-    $uid = "54f96312-d287-47e8-8113-15dbcd19f533";
+    $uid = ""; //Secret uid of your service (keep it secret) (given by CAS Enabler at the service creation)
+    $jwt = $_GET["jwt"]; //Json Web Token
+    $url = "https://perso-etudiant.u-pem.fr/~vrasquie/cas/user";
+    $key = file_get_contents("mykey"); //Private rsa key (given by CAS Enabler at the service creation)
+    $passphrase = ""; //Chosen passphrase at service creation
 
-    //Json Web Token
-    $jwt = $_GET["jwt"];
+    $headers = [
+        "service: $uid",
+        "token: $jwt"
+    ];
 
-    //Check if jwt is valid one
-    $json = file_get_contents("http://perso-etudiant.u-pem.fr/~vrasquie/cas/service/$uid/token/$jwt");
+    //Get USER
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    $json = curl_exec($ch);
+    curl_close($ch);
+
     $result = json_decode($json, true);
 
     if ($result["status"] && !$result["code"]) {
-        //Public rsa key (given by CAS Enabler at the service creation)
-        $key = file_get_contents("mykey.pub");
-        $publicKey = openssl_pkey_get_public($key);
+        $privateKey = openssl_get_privatekey($key, $passphrase);
 
-        try {
-            //Stdclass representation of the Json Web Token
-            $jwt = JWT::decode($jwt, $publicKey, array('RS256'));
-        } catch (Exception $e) {
-            //Should never append if you verify token but in case of ...
-            echo(json_encode(array($e->getMessage())));
-            return;
-        }
-
-        //The information of user is behind a base64 encoding and a rsa crypt
-        $usrCrypt = base64_decode($jwt->usr);
+        //User's information are behind a base64 encoding and RSA crypt
+        $usrCrypt = base64_decode($result["data"]);
         
-        //$usrJson = decrypted value of user in json
-        $success = openssl_public_decrypt($usrCrypt, $usrJson, $publicKey);
-
-        if ($success) {
+        if (openssl_private_decrypt($usrCrypt, $usrJson, $privateKey)) {
             echo($usrJson);
             return;
         }
+
+        echo("Error");
+        return;
     }
 
     echo($result);

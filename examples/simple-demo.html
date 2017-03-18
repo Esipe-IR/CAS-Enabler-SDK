@@ -14,7 +14,7 @@
         </style>
     </head>
     <body>
-        <button class="cas" onclick="sdk.connect();">Connect with UPEM</button>
+        <button id="cas-btn" class="cas">Connect with UPEM</button>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jschannel/1.0.0-git-commit1-8c4f7eb/jschannel.min.js"></script>
         <script src="../sdk.js"></script>
@@ -31,15 +31,17 @@
             }
 
             var config = {
-                callbackName: "callback",
-                callbackFn: callback,
-                uid: "...", //Your service uid
-                popupHeight: 400,
-                popupWidth: 1000,
-                debug: true
+                callbackName: "callback", //The function name of callback
+                callbackFn: callback, //Your callback
+                publicUid: null //Your service public uid
             };
 
             var sdk = new CASEnablerSDK(config);
+
+            var btn = document.getElementById("cas-btn");
+            btn.addEventListener('click', function() {
+                sdk.connect();                
+            }, false);
         </script>
     </body>
 </html>
