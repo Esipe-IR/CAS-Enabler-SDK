@@ -17,7 +17,7 @@ export default class CASEnablerSDK {
         this._debug("Init", this.$config);
     }
 
-    connect() {
+    connect(callback) {
         var url = this.$config.baseUrl + "/service/" + this.$config.publicUid + "/connect";
         var popup = this._popup(url, "CAS Authenticator");
 
