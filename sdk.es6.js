@@ -13,7 +13,7 @@ export default class CASEnablerSDK {
     }
 
     connect() {
-        var url = this.$config.baseUrl + "/service/" + this.$config.uid + "/connect";
+        var url = this.$config.baseUrl + "/service/" + this.$config.publicUid + "/connect";
         var win = this._popup(url, "CAS Authenticator");
 
         var chan = Channel.build({
@@ -22,29 +22,18 @@ export default class CASEnablerSDK {
             scope: "CAS.Scope"
         });
 
+        this._debug("Init Chan", chan);
+
         var self = this;
         chan.bind("connect", function(transaction, token) {
+            self._debug("Connect", token);
             self.$config.callbackFn(token);
         
             return 1;
         });
 
         chan.bind("error", function(transaction, error) {
-            if (!self.$config.debug) {
-                return 1;
-            }
-
-            switch (error) {
-                case "2":
-                    console.log("Nonexistent service");
-                    break;
-                case "4":
-                    console.log("Fatal error token");
-                    break;
-                default:
-                    console.log("Unknown error", error);
-                    break;
-            }
+            self._debug("Error", error);
 
             return 1;
         });
@@ -53,7 +42,7 @@ export default class CASEnablerSDK {
     _initConfig(userconfig) {
         var defaultconfig = {
             baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
-            uid: null,
+            publicUid: null,
             callbackName: "callback",
             callbackFn: function() {},
             popupHeight: 400,
@@ -64,9 +53,7 @@ export default class CASEnablerSDK {
         this.$config = Object.assign(defaultconfig, userconfig);
         window[this.$config.callbackName] = this.$config.callbackFn;
 
-        if (this.$config.debug) {
-            this._debug("Init Config", this.$config);
-        }
+        this._debug("Init Config", this.$config);
     }
 
     _popup(url, title) {
@@ -93,6 +80,8 @@ export default class CASEnablerSDK {
     }
 
     _debug(action, extra) {
-        console.log("CASEnabler SDK - Action: " + action + ";", extra);
+        if (this.$config.debug) {
+            console.log("CASEnabler SDK - Action: " + action + ";", extra);
+        }
     }
 }

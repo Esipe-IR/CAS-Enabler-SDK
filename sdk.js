@@ -6,13 +6,11 @@ CASEnablerSDK.prototype.setConfig = function setConfig(config) {
     this.$config = Object.assign(this.$config, config);
     window[this.$config.callbackName] = this.$config.callbackFn;
 
-    if (this.$config.debug) {
-        this._debug("Set config", this.$config);
-    }
+    this._debug("Set config", this.$config);
 }
 
 CASEnablerSDK.prototype.connect = function connect() {
-    var url = this.$config.baseUrl + "/service/" + this.$config.uid + "/connect";
+    var url = this.$config.baseUrl + "/service/" + this.$config.publicUid + "/connect";
     var win = this._popup(url, "CAS Authenticator");
 
     var chan = Channel.build({
@@ -21,29 +19,18 @@ CASEnablerSDK.prototype.connect = function connect() {
         scope: "CAS.Scope"
     });
 
+    this._debug("Init Chan", chan);
+
     var self = this;
     chan.bind("connect", function(transaction, token) {
+        self._debug("Connect", token);
         self.$config.callbackFn(token);
     
         return 1;
     });
 
     chan.bind("error", function(transaction, error) {
-        if (!self.$config.debug) {
-            return 1;
-        }
-
-        switch (error) {
-            case "2":
-                console.log("Nonexistent service");
-                break;
-            case "4":
-                console.log("Fatal error token");
-                break;
-            default:
-                console.log("Unknown error", error);
-                break;
-        }
+        self._debug("Error", error);
 
         return 1;
     });
@@ -52,7 +39,7 @@ CASEnablerSDK.prototype.connect = function connect() {
 CASEnablerSDK.prototype._initConfig = function _initConfig(userconfig) {
     var defaultconfig = {
         baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
-        uid: null,
+        publicUid: null,
         callbackName: "callback",
         callbackFn: function() {},
         popupHeight: 400,
@@ -63,9 +50,7 @@ CASEnablerSDK.prototype._initConfig = function _initConfig(userconfig) {
     this.$config = Object.assign(defaultconfig, userconfig);
     window[this.$config.callbackName] = this.$config.callbackFn;
 
-    if (this.$config.debug) {
-        this._debug("Init Config", this.$config);
-    }
+    this._debug("Init Config", this.$config);
 }
 
 CASEnablerSDK.prototype._popup = function _popup(url, title) {
@@ -92,5 +77,7 @@ CASEnablerSDK.prototype._popup = function _popup(url, title) {
 }
 
 CASEnablerSDK.prototype._debug = function _debug(action, extra) {
-    console.log("CASEnabler SDK - Action: " + action + ";", extra);
+    if (this.$config.debug) {
+        console.log("CASEnabler SDK - Action: " + action + ";", extra);
+    }
 }
