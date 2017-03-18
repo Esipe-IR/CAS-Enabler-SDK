@@ -2,8 +2,6 @@ var CASEnablerSDK = function(userconfig) {
     var defaultconfig = {
         baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
         publicUid: null,
-        callbackName: "callback",
-        callbackFn: function() {},
         popupHeight: 400,
         popupWidth: 800,
         debug: false
@@ -15,35 +13,31 @@ var CASEnablerSDK = function(userconfig) {
         throw new Error("publicUid is a mandatory parameter for CAS Enabler SDK");
     }
 
-    if (!this.$config.callbackFn) {
-        throw new Error("callbackFn is a mandatory parameter for CAS Enabler SDK");
-    }
-
-    window[this.$config.callbackName] = this.$config.callbackFn;
     this._debug("Init", this.$config);
 }
 
-CASEnablerSDK.prototype.connect = function connect() {
+CASEnablerSDK.prototype.connect = function connect(callback) {
     var url = this.$config.baseUrl + "/service/" + this.$config.publicUid + "/connect";
     var popup = this._popup(url, "CAS Authenticator");
 
-    var chan = Channel.build({
+    var $chan = Channel.build({
         window: popup,
         origin: "*",
         scope: "CAS.Scope"
     });
 
-    this._debug("Init Chan", chan);
+    this._debug("Init Chan", $chan);
 
     var self = this;
-    chan.bind("connect", function(transaction, token) {
+    $chan.bind("connect", function(transaction, token) {
         self._debug("Chan connect", token);
-        self.$config.callbackFn(token);
+        if (typeof callback === "function") callback(token, null);
         return 1;
     });
 
-    chan.bind("error", function(transaction, error) {
+    $chan.bind("error", function(transaction, error) {
         self._debug("Chan error", error);
+        if (typeof callback === "function") callback(null, error);
         return 1;
     });
 }

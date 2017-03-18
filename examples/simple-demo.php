@@ -36,4 +36,4 @@
         return;
     }
 
-    echo($result);
+    echo($json);

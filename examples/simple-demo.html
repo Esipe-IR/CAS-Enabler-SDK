@@ -19,7 +19,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jschannel/1.0.0-git-commit1-8c4f7eb/jschannel.min.js"></script>
         <script src="../sdk.js"></script>
         <script>
-            function callback(jwt) {
+            function callback(jwt, error) {
+                if (error !== null) {
+                    return alert("Got an error");
+                }
+
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', 'simple-demo.php?jwt=' + jwt);
                 xhr.onreadystatechange = function() {
@@ -31,16 +35,14 @@
             }
 
             var config = {
-                callbackName: "callback", //The function name of callback
-                callbackFn: callback, //Your callback
-                publicUid: null //Your service public uid
+                publicUid: "", //Your service public uid
             };
 
             var sdk = new CASEnablerSDK(config);
 
             var btn = document.getElementById("cas-btn");
             btn.addEventListener('click', function() {
-                sdk.connect();                
+                sdk.connect(callback);                
             }, false);
         </script>
     </body>
