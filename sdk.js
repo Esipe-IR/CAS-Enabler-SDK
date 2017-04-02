@@ -1,48 +1,34 @@
-var CASEnablerSDK = function(userconfig) {
+var UPEMConnectSDK = function(userconfig) {
     var defaultconfig = {
         baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
-        publicUid: null,
         popupHeight: 400,
         popupWidth: 800,
         debug: false
     };
 
     this.$config = Object.assign(defaultconfig, userconfig);
-
-    if (!this.$config.publicUid) {
-        throw new Error("publicUid is a mandatory parameter for CAS Enabler SDK");
-    }
-
     this._debug("Init", this.$config);
 }
 
-CASEnablerSDK.prototype.connect = function connect(callback) {
-    var url = this.$config.baseUrl + "/service/" + this.$config.publicUid + "/connect";
-    var popup = this._popup(url, "CAS Authenticator");
+UPEMConnectSDK.prototype.connect = function connect(callback) {
+    var url = this.$config.baseUrl + "/connect";
+    var popup = this._popup(url, "UPEM Connect");
 
-    var $chan = Channel.build({
-        window: popup,
-        origin: "*",
-        scope: "CAS.Scope"
-    });
+    window.addEventListener("message", function(event) {
+        //if (event.origin !== self.baseUrl)
+            //return;
 
-    this._debug("Init Chan", $chan);
+        var data = event.data;
+        if (!data) {}
+        if (!data.token) {}
 
-    var self = this;
-    $chan.bind("connect", function(transaction, token) {
-        self._debug("Chan connect", token);
-        if (typeof callback === "function") callback(token, null);
-        return 1;
-    });
-
-    $chan.bind("error", function(transaction, error) {
-        self._debug("Chan error", error);
-        if (typeof callback === "function") callback(null, error);
-        return 1;
+        //Check token and decrypt
+        
+        callback(data.token, data.code);
     });
 }
 
-CASEnablerSDK.prototype._popup = function _popup(url, title) {
+UPEMConnectSDK.prototype._popup = function _popup(url, title) {
     var dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : screen.left;
     var dualScreenTop = window.screenTop !== undefined ? window.screenTop : screen.top;
 
@@ -65,7 +51,7 @@ CASEnablerSDK.prototype._popup = function _popup(url, title) {
     return newWindow;
 }
 
-CASEnablerSDK.prototype._debug = function _debug(action, extra) {
+UPEMConnectSDK.prototype._debug = function _debug(action, extra) {
     if (this.$config.debug) {
         console.log("CASEnabler SDK - " + action + " - ", extra);
     }
