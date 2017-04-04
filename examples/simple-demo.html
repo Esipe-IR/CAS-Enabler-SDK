@@ -1,34 +1,23 @@
 <html>
     <head>
         <title>Simple SDK Demo</title>
-
-        <style>
-            .cas {
-                background: #EB5B0C;
-                padding: 10px 15px;
-                color: white;
-                border: none;
-                border-radius: 2px;
-                cursor: pointer;
-            }
-        </style>
     </head>
     <body>
-        <button id="cas-btn" class="cas">Connect with UPEM</button>
+        <iframe id="upem_connect"></iframe>
 
         <script src="../sdk.js"></script>
         <script>
-            function callback(usr, error) {
+            function callback(data, usr) {
                 console.log(usr);
             }
 
-            var config = {baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/cas"};
-            var sdk = new UPEMConnectSDK(config);
+            var config = {
+                baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/cas",
+                iframe: "upem_connect"
+            };
 
-            var btn = document.getElementById("cas-btn");
-            btn.addEventListener('click', function() {
-                sdk.connect(callback);                
-            });
+            var sdk = new UPEMConnectSDK(config);
+            sdk.init(callback);
         </script>
     </body>
 </html>
