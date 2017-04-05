@@ -7,8 +7,9 @@
 
         <script src="../sdk.js"></script>
         <script>
-            function callback(data, usr) {
-                console.log(usr);
+            function callback(data) {
+                console.log(data);
+                console.log(sdk.extractUser(data.token));
             }
 
             var config = {
