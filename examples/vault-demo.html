@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>UPEM-Connect-SDK - Vault Demo</title>
+  </head>
+  <body>
+    <script src="../sdk.js"></script>
+    <script>
+      function callback(data) {
+        console.log(data);
+      }
+
+      var config = {
+        id: "vault-demo"
+      };
+      
+      var sdk = new UPEMConnectSDK(config);
+      
+      sdk.getHandshake(function() {
+        sdk.getUser(callback);
+      });
+    </script>
+  </body>
+</html>

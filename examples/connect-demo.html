@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>UPEM-Connect-SDK - Connect Demo</title>
+  </head>
+  <body>
+    <iframe id="upem-connect"></iframe>
+
+    <script src="../sdk.js"></script>
+    <script>
+      function callback(data) {
+        console.log(data);
+      }
+
+      var config = {
+        baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/cas",
+        id: "connect-demo",
+        iframeId: "upem-connect"
+      };
+
+      var sdk = new UPEMConnectSDK(config);
+
+      sdk.connect(callback);
+    </script>
+  </body>
+</html>
