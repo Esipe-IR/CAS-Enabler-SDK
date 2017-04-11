@@ -15,6 +15,7 @@
       
       var sdk = new UPEMConnectSDK(config);
       
+      sdk.reset();
       sdk.getHandshake(function() {
         sdk.getUser(callback);
       });

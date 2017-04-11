@@ -48,22 +48,26 @@ UPEMConnectSDK.prototype.init = function init() {
   this._debug("Init", this);
 }
 
-UPEMConnectSDK.prototype.getHandshake = function getHandshake(callback) {
-  this.$callback["receiveHandshake"] = callback;
-  this._post(window, "getHandshake", this.$config.vault, this.$config.id);
+UPEMConnectSDK.prototype.reset = function reset() {
+  this._post("reset", this.$config.vault, this.$config.id);
 }
 
-UPEMConnectSDK.prototype.getToken = function getToken() {
+UPEMConnectSDK.prototype.getHandshake = function getHandshake(callback) {
+  this.$callback["receiveHandshake"] = callback;
+  this._post("getHandshake", this.$config.vault, this.$config.id);
+}
+
+UPEMConnectSDK.prototype.getToken = function getToken(callback) {
   this.$callback["receiveToken"] = callback;
-  this._post(window, "getToken", this.$config.vault, this.$config.id);
+  this._post("getToken", this.$config.vault, this.$config.id);
 }
 
 UPEMConnectSDK.prototype.getUser = function getUser(callback) {
   this.$callback["receiveUser"] = callback;
-  this._post(window, "getUser", this.$config.vault, this.$config.id);
+  this._post("getUser", this.$config.vault, this.$config.id);
 }
 
-UPEMConnectSDK.prototype.receiveDefault = function receiveDefault() {
+UPEMConnectSDK.prototype.receiveDefault = function receiveDefault(event) {
   console.log(event.data);
 
   if (typeof this.ref.$callback[event.data.type] == "function") {
@@ -92,8 +96,8 @@ UPEMConnectSDK.prototype.extractUser = function extractUser(token) {
   }
 }
 
-UPEMConnectSDK.prototype._post = function _post(src, type, scope, target, data) {
-  src.postMessage({type: type, scope: scope, target: target, data: data}, "*");
+UPEMConnectSDK.prototype._post = function _post(type, scope, target, data) {
+  window.postMessage({type: type, scope: scope, target: target, data: data}, "*");
 }
 
 UPEMConnectSDK.prototype._debug = function _debug(action, extra) {
