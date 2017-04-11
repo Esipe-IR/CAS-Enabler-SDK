@@ -1,3 +1,8 @@
+/**
+ * UPEMConnectSDK - Create object SDK for UPEM connect
+ *
+ * @param {*} userconfig 
+ */
 var UPEMConnectSDK = function(userconfig) {
   var defaultconfig = {
     baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
@@ -18,6 +23,9 @@ var UPEMConnectSDK = function(userconfig) {
   this.init();
 }
 
+/**
+ * init - Init SDK
+ */
 UPEMConnectSDK.prototype.init = function init() {
   this.$fn = {
     receiveDefault: this.receiveDefault,
@@ -48,25 +56,48 @@ UPEMConnectSDK.prototype.init = function init() {
   this._debug("Init", this);
 }
 
-UPEMConnectSDK.prototype.reset = function reset() {
+/**
+ * reset - Reset user's config/rights for SDK
+ */
+UPEMConnectSDK.prototype.resetVault = function resetVault() {
   this._post("reset", this.$config.vault, this.$config.id);
 }
 
-UPEMConnectSDK.prototype.getHandshake = function getHandshake(callback) {
+/**
+ * getHandshake - Shake if user have install UPEM-Vault
+ *
+ * @param {function} callback
+ */
+UPEMConnectSDK.prototype.getVaultHandshake = function getVaultHandshake(callback) {
   this.$callback["receiveHandshake"] = callback;
   this._post("getHandshake", this.$config.vault, this.$config.id);
 }
 
-UPEMConnectSDK.prototype.getToken = function getToken(callback) {
+/**
+ * getToken - Ask user's token to UPEM-Vault
+ *
+ * @param {function} callback
+ */
+UPEMConnectSDK.prototype.getVaultToken = function getVaultToken(callback) {
   this.$callback["receiveToken"] = callback;
   this._post("getToken", this.$config.vault, this.$config.id);
 }
 
-UPEMConnectSDK.prototype.getUser = function getUser(callback) {
+/**
+ * getUser - Ask user's info to UPEM-Vault
+ *
+ * @param {function} callback
+ */
+UPEMConnectSDK.prototype.getVaultUser = function getVaultUser(callback) {
   this.$callback["receiveUser"] = callback;
   this._post("getUser", this.$config.vault, this.$config.id);
 }
 
+/**
+ * receiveDefault - Receive message and execute the right callback
+ *
+ * @param {Event} event
+ */
 UPEMConnectSDK.prototype.receiveDefault = function receiveDefault(event) {
   console.log(event.data);
 
@@ -77,6 +108,11 @@ UPEMConnectSDK.prototype.receiveDefault = function receiveDefault(event) {
   this.ref.$callback[event.data.type] = null;
 }
 
+/**
+ * connect - Connect method with IFRAME
+ * 
+ * @param {function} callback
+ */
 UPEMConnectSDK.prototype.connect = function connect(callback) {
   this.$callback["receiveToken"] = callback;
 
@@ -85,15 +121,6 @@ UPEMConnectSDK.prototype.connect = function connect(callback) {
 
   iframe.src = this.$config.baseUrl + "/connect?target=" + this.$config.id;
   iframe.style = "border:none;width:200px;height:70px;";
-}
-
-UPEMConnectSDK.prototype.extractUser = function extractUser(token) {
-  try {
-    var json = JSON.parse(atob(token.split(".")[1]));
-    return JSON.parse(atob(json.usr));
-  } catch(e) {
-    return null;
-  }
 }
 
 UPEMConnectSDK.prototype._post = function _post(type, scope, target, data) {

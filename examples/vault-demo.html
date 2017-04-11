@@ -15,9 +15,8 @@
       
       var sdk = new UPEMConnectSDK(config);
       
-      sdk.reset();
-      sdk.getHandshake(function() {
-        sdk.getUser(callback);
+      sdk.getVaultHandshake(function() {
+        sdk.getVaultUser(callback);
       });
     </script>
   </body>
