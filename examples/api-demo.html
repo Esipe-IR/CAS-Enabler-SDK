@@ -3,22 +3,20 @@
     <title>UPEM-Connect-SDK - Connect Demo</title>
   </head>
   <body>
-    <iframe id="upem-connect"></iframe>
-
     <script src="../sdk.js"></script>
     <script>
-      function callback(data) {
-        console.log(data);
+      function callback(user) {
+        console.log(user);
       }
 
       var sdk = new UPEMSDK({
         baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/u"
       });
 
-      var connectSDK = sdk.connect({
-        iframe: "upem-connect",
-        callback: callback
-      });
+      var apiSDK = sdk.api();
+      
+      apiSDK.getUser(callback);
+      apiSDK.getLdapUser(callback);
     </script>
   </body>
 </html>

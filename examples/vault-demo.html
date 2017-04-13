@@ -8,15 +8,16 @@
       function callback(data) {
         console.log(data);
       }
+      
+      var sdk = new UPEMSDK({
+        debug: true
+      });
+      var vaultSDK = sdk.vault({
+        target: "vault-demo"
+      });
 
-      var config = {
-        id: "vault-demo"
-      };
-      
-      var sdk = new UPEMConnectSDK(config);
-      
-      sdk.getVaultHandshake(function() {
-        sdk.getVaultUser(callback);
+      vaultSDK.getHandshake(function() {
+        vaultSDK.getUser(callback);
       });
     </script>
   </body>

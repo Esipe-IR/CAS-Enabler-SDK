@@ -1,50 +1,177 @@
-/**
- * UPEMConnectSDK - Create object SDK for UPEM connect
- *
- * @param {*} userconfig 
- */
-var UPEMConnectSDK = function(userconfig) {
-  var defaultconfig = {
+/* UPEM SDK */
+var UPEMSDK = function(config) {
+  var dc = {
     baseUrl: "http://perso-etudiant.u-pem.fr/~vrasquie/cas",
-    id: null,
-    iframeId: null,
-    vault: "UPEM-Vault",
     debug: false
   };
 
-  this.$config = Object.assign(defaultconfig, userconfig);
-
-  if (!this.$config.id) throw new Error("config.id is required");
-
-  this.$fn = {};
-  this.$callback = {};
-
-  this._debug("Create", this);
-  this.init();
+  this.$config = Object.assign(dc, config);
+  this._debug("UPEMSDK", "INIT", this);
 }
 
-/**
- * init - Init SDK
- */
-UPEMConnectSDK.prototype.init = function init() {
+UPEMSDK.prototype.api = function api() {
+  return new UPEMApiSDK(this);
+}
+
+UPEMSDK.prototype.connect = function connect(config) {
+  return new UPEMConnectSDK(this, config);
+}
+
+UPEMSDK.prototype.vault = function vault(config) {
+  return new UPEMVaultSDK(this, config);
+}
+
+UPEMSDK.prototype._debug = function _debug(ctx, action, extra) {
+  if (this.$config.debug) {
+    console.log(ctx, " - " + action + " - ", extra);
+  }
+}
+
+/* UPEM API */
+var UPEMApiSDK = function(parent) {
+  this._block = false;
+  this._mutex = [];
+  this._parent = parent;
+  this._parent._debug("UPEMApiSDK", "INIT", this);
+}
+
+UPEMApiSDK.prototype.getToken = function getToken(callback) {
+  var self = this;
+  this._mutex.push(callback);
+
+  if (!this._block) {
+    this._block = true;  
+
+    this._ajax("/token", null, function(x) {
+      self.token = x.data;
+
+      self._mutex.forEach(function(call) {
+        call(self.token);
+      }, this);
+    });
+  }
+}
+
+UPEMApiSDK.prototype.getUser = function getUser(callback) {
+  if (!this._checkToken("getUser", callback)) return;
+
+  this._ajax("/me", this.token, function(x) {
+    callback(x.data);
+  });
+}
+
+UPEMApiSDK.prototype.getLdapUser = function getLdapUser(callback) {
+  if (!this._checkToken("getLdapUser", callback)) return;
+  
+  this._ajax("/me/ldap", this.token, function(x) {
+    callback(x.data);
+  });  
+}
+
+UPEMApiSDK.prototype.getCalendar = function getCalendar(callback) {
+  if (!this._checkToken("getCalendar", callback)) return;
+
+  this._ajax("/", this.token, function(x) {
+    callback(x.data);
+  });
+}
+
+UPEMApiSDK.prototype._checkToken = function _checkToken(fn, callback) {
+  if (!this.token) {
+    var self = this;
+    
+    this.getToken(function() { 
+      self[fn](callback);
+    });
+
+    return false;
+  }
+
+  return true;
+}
+
+UPEMApiSDK.prototype._ajax = function _ajax(uri, token, callback) {
+  var x = new XMLHttpRequest();
+  var url = this._parent.$config.baseUrl + "/api" + uri;
+  var self = this;
+
+  x.responseType = 'json';
+  x.onreadystatechange = function (oEvent) {
+    if (x.readyState === 4) {
+      if (x.status === 200) {
+        self._parent._debug("UPEMApiSDK", "Ajax success", x.response);
+        callback(x.response, null);
+      } else {
+        self._parent._debug("UPEMApiSDK", "Ajax error", x.statusText);        
+        callback(null, x.statusText);
+      }
+    }
+  }
+
+  x.open("GET", url);
+  x.setRequestHeader('token', token);
+  x.send();
+}
+
+/* UPEM Connect */
+var UPEMConnectSDK = function(parent, config) {
+  if (!config.iframe) throw new Error("config.iframe is required");
+  if (!config.callback) throw new Error("config.callback is required");
+
+  var dc = {
+    iframe: null
+  };
+
+  this._parent = parent;
+  this.$config = Object.assign(dc, config);
+
+  var iframe = document.getElementById(this.$config.iframe);
+  if (!iframe) throw new Error("No <iframe> element was find with id : " + this.$config.iframe);
+  iframe.src = this._parent.$config.baseUrl + "/connect";
+  iframe.style = "border:none;width:200px;height:70px;";
+
+  var self = this;
+  window.addEventListener("message", function(event) {
+    if (!event.data) {
+      return self._parent._debug("UPEMConnectSDK", "Event Message (ERROR)", event);
+    }
+
+    self._parent._debug("UPEMConnectSDK", "Event Message (RECEIVE)", event);
+    self.$config.callback(event.data.data);
+  });
+
+  this._parent._debug("UPEMConnectSDK", "INIT", this);
+}
+
+/* UPEM Vault */
+var UPEMVaultSDK = function(parent, config) {
+  if (!config.target) throw new Error("config.target is required");
+
+  var dc = {
+    target: null,
+    scope: "UPEM-Vault"
+  };
+
+  this._parent = parent;
+  this.$config = Object.assign(dc, config);
+
   this.$fn = {
     receiveDefault: this.receiveDefault,
     ref: this
   };
-
+  this.$callback = {};
   var self = this;
-
   window.addEventListener("message", function(event) {
     if (
       !event.data
       || !event.data.type
       || !event.data.target
-      || event.data.target !== self.$config.id
+      || event.data.target !== self.$config.target
     ) {
-      return self._debug("Event Message (ERROR)", event);urn;
+      return self._parent._debug("UPEMVaultSDK", "Event Message (ERROR)", event);urn;
     }
 
-    self._debug("Event Message (RECEIVE)", event);
+    self._parent._debug("UPEMVaultSDK", "Event Message (RECEIVE)", event);
 
     if (!self.$fn[event.data.type]) {
       return self.$fn["receiveDefault"](event);
@@ -53,53 +180,30 @@ UPEMConnectSDK.prototype.init = function init() {
     return self.$fn[event.data.type](event);
   });
 
-  this._debug("Init", this);
+  this._parent._debug("UPEMVaultSDK", "INIT", this);
 }
 
-/**
- * reset - Reset user's config/rights for SDK
- */
-UPEMConnectSDK.prototype.resetVault = function resetVault() {
-  this._post("reset", this.$config.vault, this.$config.id);
+UPEMVaultSDK.prototype.reset = function reset() {
+  this._post("reset", this.$config.scope, this.$config.target);
 }
 
-/**
- * getHandshake - Shake if user have install UPEM-Vault
- *
- * @param {function} callback
- */
-UPEMConnectSDK.prototype.getVaultHandshake = function getVaultHandshake(callback) {
+UPEMVaultSDK.prototype.getHandshake = function getHandshake(callback) {
   this.$callback["receiveHandshake"] = callback;
-  this._post("getHandshake", this.$config.vault, this.$config.id);
+  this._post("getHandshake", this.$config.scope, this.$config.target);
 }
 
-/**
- * getToken - Ask user's token to UPEM-Vault
- *
- * @param {function} callback
- */
-UPEMConnectSDK.prototype.getVaultToken = function getVaultToken(callback) {
+UPEMVaultSDK.prototype.getToken = function getToken(callback) {
   this.$callback["receiveToken"] = callback;
-  this._post("getToken", this.$config.vault, this.$config.id);
+  this._post("getToken", this.$config.scope, this.$config.target);
 }
 
-/**
- * getUser - Ask user's info to UPEM-Vault
- *
- * @param {function} callback
- */
-UPEMConnectSDK.prototype.getVaultUser = function getVaultUser(callback) {
+UPEMVaultSDK.prototype.getUser = function gettUser(callback) {
   this.$callback["receiveUser"] = callback;
-  this._post("getUser", this.$config.vault, this.$config.id);
+  this._post("getUser", this.$config.scope, this.$config.target);
 }
 
-/**
- * receiveDefault - Receive message and execute the right callback
- *
- * @param {Event} event
- */
-UPEMConnectSDK.prototype.receiveDefault = function receiveDefault(event) {
-  console.log(event.data);
+UPEMVaultSDK.prototype.receiveDefault = function receiveDefault(event) {
+  this.ref._parent._debug("UPEMVaultSDK", "Event DATA", event.data);
 
   if (typeof this.ref.$callback[event.data.type] == "function") {
     this.ref.$callback[event.data.type](event.data.data);
@@ -108,27 +212,6 @@ UPEMConnectSDK.prototype.receiveDefault = function receiveDefault(event) {
   this.ref.$callback[event.data.type] = null;
 }
 
-/**
- * connect - Connect method with IFRAME
- * 
- * @param {function} callback
- */
-UPEMConnectSDK.prototype.connect = function connect(callback) {
-  this.$callback["receiveToken"] = callback;
-
-  var iframe = document.getElementById(this.$config.iframeId);
-  if (!iframe) throw new Error("No <iframe> element was find with id : " + this.$config.iframeId);
-
-  iframe.src = this.$config.baseUrl + "/connect?target=" + this.$config.id;
-  iframe.style = "border:none;width:200px;height:70px;";
-}
-
-UPEMConnectSDK.prototype._post = function _post(type, scope, target, data) {
+UPEMVaultSDK.prototype._post = function _post(type, scope, target, data) {
   window.postMessage({type: type, scope: scope, target: target, data: data}, "*");
-}
-
-UPEMConnectSDK.prototype._debug = function _debug(action, extra) {
-  if (this.$config.debug) {
-    console.log("CASEnabler SDK - " + action + " - ", extra);
-  }
 }
