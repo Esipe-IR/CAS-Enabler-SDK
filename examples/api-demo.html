@@ -3,6 +3,8 @@
     <title>UPEM-Connect-SDK - Connect Demo</title>
   </head>
   <body>
+    <iframe id="upem-connect"></iframe>
+    
     <script src="../sdk.js"></script>
     <script>
       function callback(user) {
@@ -10,13 +12,15 @@
       }
 
       var sdk = new UPEMSDK({
-        baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/u"
+        baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/u",
+        scope: UPEMSDK_API,
+        iframe: "upem-connect"
       });
 
-      var apiSDK = sdk.api();
-      
-      apiSDK.getUser(callback);
-      apiSDK.getLdapUser(callback);
+      sdk.onConnect(function() {
+        sdk.getUser(callback);
+        sdk.getLdapUser(callback);
+      });
     </script>
   </body>
 </html>

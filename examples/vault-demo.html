@@ -10,14 +10,13 @@
       }
       
       var sdk = new UPEMSDK({
+        baseUrl: "http://localhost/UPEM-Connect/web/app_dev.php/~vrasquie/u",
+        scope: UPEMSDK_VAULT,
         debug: true
       });
-      var vaultSDK = sdk.vault({
-        target: "vault-demo"
-      });
 
-      vaultSDK.getHandshake(function() {
-        vaultSDK.getUser(callback);
+      sdk.onConnect(function() {
+        sdk.getUser(callback);
       });
     </script>
   </body>
