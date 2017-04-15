@@ -1,0 +1,27 @@
+{
+  "name": "upem-sdk",
+  "version": "2.0.0",
+  "description": "UPEM javascript SDK for UPEM-Core, UPEM-Vault...",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Esipe-IR/UPEM-SDK.git"
+  },
+  "keywords": [
+    "UPEM",
+    "SDK",
+    "JS"
+  ],
+  "author": "Vincent Rasquier",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Esipe-IR/UPEM-SDK/issues"
+  },
+  "homepage": "https://github.com/Esipe-IR/UPEM-SDK#readme"
+}
