@@ -52,14 +52,16 @@ UPEMSDK.prototype._ajax = function _ajax(uri, token, callback) {
   x.onreadystatechange = function (oEvent) {
     if (x.readyState === 4) {
       if (x.status === 200) {
-        self._debug("Ajax success", x.response);
+        self._debug("AJAX Success", x.response);
         callback(x.response, null);
       } else {
-        self._debug("Ajax error", x.statusText);        
+        self._debug("AJAX Error", x.statusText);
         callback(null, x.statusText);
       }
     }
   }
+
+  this._debug("AJAX Request", {url: url, token: token});
 
   x.open("GET", url);
   x.setRequestHeader('token', token);
@@ -112,10 +114,32 @@ UPEMSDK.prototype.getLdapUser = function getLdapUser(callback) {
   });  
 }
 
-UPEMSDK.prototype.getCalendar = function getCalendar(callback) {
+UPEMSDK.prototype.getDayEvents = function getDayEvents(callback) {
   if (!this.$config.token) throw new Error("config.token is undefined. User maybe not connected yet");  
 
-  this._ajax("/", this.$config.token, function(x) {
+  var curr = new Date();
+  var date = (curr.getMonth() + 1) + "/" + curr.getDate() + "/" + curr.getFullYear();
+
+  var uri = "/calendar/events" + "?date=" + date + "detail=" + 7;
+
+  this._ajax(uri, this.$config.token, function(x) {
+    callback(x.data);
+  });
+}
+
+UPEMSDK.prototype.getWeekEvents = function getWeekEvents(callback) {
+  if (!this.$config.token) throw new Error("config.token is undefined. User maybe not connected yet");  
+
+  var curr = new Date();
+  var f = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + (curr.getDay() == 0 ? -6 : 1) - curr.getDay());
+  var l = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() + (curr.getDay() == 0 ? 0 : 7) - curr.getDay());
+
+  var startDate = (f.getMonth() + 1) + "/" + f.getDate() + "/" + f.getFullYear();
+  var endDate = (l.getMonth() + 1) + "/" + l.getDate() + "/" + l.getFullYear();
+
+  var uri = "/calendar/events" + "?startDate=" + startDate + "&endDate=" + endDate + "&detail=" + 7;
+
+  this._ajax(uri, this.$config.token, function(x) {
     callback(x.data);
   });
 }
