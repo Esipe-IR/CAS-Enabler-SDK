@@ -1,18 +1,18 @@
 <html>
   <head>
-    <title>UPEM-Connect-SDK - Vault Demo</title>
+    <title>UPEM-SDK - Calendar Demo</title>
   </head>
   <body>
     <iframe id="upem-connect"></iframe>
     
-    <script src="../sdk.js"></script>
+    <script src="../dist/sdk.min.js"></script>
     <script>
-      function callback(events) {
-        console.log(events);
+      function callback(events, err) {
+        console.log(events.data);
       }
       
       var sdk = new UPEMSDK({
-        baseUrl: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
+        baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
         scope: UPEMSDK_API,
         iframe: "upem-connect",
         debug: true

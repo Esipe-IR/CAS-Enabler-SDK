@@ -1,16 +1,16 @@
 <html>
   <head>
-    <title>UPEM-Connect-SDK - Vault Demo</title>
+    <title>UPEM-SDK - Vault Demo</title>
   </head>
   <body>
-    <script src="../sdk.js"></script>
+    <script src="../dist/sdk.min.js"></script>
     <script>
-      function callback(user) {
+      function callback(user, err) {
         console.log(user.data);
       }
       
       var sdk = new UPEMSDK({
-        baseUrl: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
+        baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
         scope: UPEMSDK_VAULT,
         debug: true
       });
