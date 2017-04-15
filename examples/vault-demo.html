@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>UPEM-SDK - Vault Demo</title>
+  </head>
+  <body>
+    <script src="../dist/sdk.min.js"></script>
+    <script>
+      function callback(user, err) {
+        console.log(user.data, err);
+      }
+      
+      var sdk = new UPEMSDK({
+        baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
+        debug: true
+      });
+
+      sdk.isVault();
+
+      sdk.onConnect(function() {
+        sdk.getUser(callback);
+      });
+
+      sdk.tryVaultAuth();
+    </script>
+  </body>
+</html>
