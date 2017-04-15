@@ -48,9 +48,9 @@ var UPEMSDK = (function () {
                 }
             }
         };
-        this._debug("AJAX Request", { url: url, token: this.$config.token });
+        this._debug("AJAX Request", { url: url, token: this.getToken() });
         x.open("GET", url);
-        x.setRequestHeader('token', this.$config.token);
+        x.setRequestHeader('token', this.getToken());
         x.send();
     };
     UPEMSDK.prototype._post = function (type, data) {
