@@ -29,7 +29,7 @@ var UPEMSDK = (function () {
     UPEMSDK.prototype._setupListener = function () {
         var self = this;
         window.addEventListener("message", function (event) {
-            if (!event.data.type || event.data.scope !== self.$config.scope) {
+            if (!event.data || !event.data.type || event.data.scope !== self.$config.scope) {
                 return self._debug("=> Event Message (ERROR)", event);
             }
             self._debug("=> Event Message (RECEIVE)", event);
