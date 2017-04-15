@@ -22,7 +22,7 @@ class UPEMSDK {
 
   constructor(userConfig: Config) {
     var defaultConfig: Config = {
-      baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/u",
+      baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/core",
       scope: null,
       token: null,
       debug: false

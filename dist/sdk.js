@@ -3,7 +3,7 @@ var UPEMSDK_VAULT = "UPEM-Vault";
 var UPEMSDK = (function () {
     function UPEMSDK(userConfig) {
         var defaultConfig = {
-            baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/u",
+            baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/core",
             scope: null,
             token: null,
             debug: false
