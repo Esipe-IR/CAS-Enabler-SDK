@@ -6,18 +6,21 @@
     <script src="../dist/sdk.min.js"></script>
     <script>
       function callback(user, err) {
-        console.log(user.data);
+        console.log(user.data, err);
       }
       
       var sdk = new UPEMSDK({
         baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
-        scope: UPEMSDK_VAULT,
         debug: true
       });
+
+      sdk.isVault();
 
       sdk.onConnect(function() {
         sdk.getUser(callback);
       });
+
+      sdk.tryVaultAuth();
     </script>
   </body>
 </html>

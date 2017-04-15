@@ -4,7 +4,6 @@ const UPEMSDK_VAULT: string = "UPEM-Vault";
 interface Config {
   baseURL: string;
   scope: string;
-  iframe: string;
   token: string;
   debug: boolean;
 }
@@ -25,7 +24,6 @@ class UPEMSDK {
     var defaultConfig: Config = {
       baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/u",
       scope: null,
-      iframe: null,
       token: null,
       debug: false
     }
@@ -33,22 +31,8 @@ class UPEMSDK {
     this.$config = (<any>Object).assign(defaultConfig, userConfig);
     this.$callback = {};
 
-    this._setupIframe();
     this._setupListener();
     this._debug("INIT", this);
-  }
-
-  _setupIframe(): void {
-    if (this.$config.iframe) {
-      var iframe: HTMLIFrameElement = <HTMLIFrameElement> document.getElementById(this.$config.iframe);
-      
-      if (!iframe) throw new Error("No <iframe> element was find with id : " + this.$config.iframe);
-      
-      iframe.src = this.$config.baseURL + "/connect";
-      iframe.style.border = "none";
-      iframe.style.width = "200px";
-      iframe.style.height = "70px";
-    }
   }
 
   _setupListener(): void {
@@ -64,18 +48,17 @@ class UPEMSDK {
 
       if (typeof self.$callback[event.data.type] === "function") {
         self.$callback[event.data.type](event.data);
-        self.$callback[event.data.type] = null; 
       }
     });
   }
 
-  _debug(action: string, extra: any) {
+  _debug(action: string, extra: any): void {
     if (this.$config.debug) {
       console.log("UPEM SDK", " - " + action + " - ", extra);
     }
   }
 
-  _ajax(uri: string, callback: (obj: Object, err: String) => void) {
+  _ajax(uri: string, callback: (obj: Object, err: String) => void): void {
     var x: XMLHttpRequest = new XMLHttpRequest(); 
 
     var url: string = this.$config.baseURL + "/api" + uri;
@@ -100,7 +83,7 @@ class UPEMSDK {
     x.send();
   }
 
-  _post(type: string, data: any) {
+  _post(type: string, data: any): void {
     var msg: PostMessage = {
       type: type,
       code: 0,
@@ -112,49 +95,63 @@ class UPEMSDK {
     window.postMessage(msg, "*");
   }
 
-  _reset() {
+  _reset(): void {
     if (this.$config.scope === UPEMSDK_VAULT) {
       this._post("reset", null);
     }
   }
 
-  isApi() {
+  isApi(): void {
     this.$config.scope = UPEMSDK_API;
   }
 
-  isVault() {
+  isVault(): void {
     this.$config.scope = UPEMSDK_VAULT;
   }
 
-  onConnect(callback: (data: PostMessage) => void) {
+  onConnect(callback: (data: PostMessage) => void): void {
     var self: UPEMSDK = this;
 
     this.$callback["receiveToken"] = function(data: PostMessage) {
-      if (data.error !== null || data.code !== 0) {
-        return callback(data);
+      if (data.error === null && data.code === 0) {
+        self.setToken(data.data);
       }
 
-      self.$config.token = data.data;
       callback(data);
     };
+  }
 
+  setToken(token: string): void {
+    this.$config.token = token;
+    localStorage.setItem("upem-token", token);
+  }
+
+  getToken(): string {
+    if (!this.$config.token) {
+      return localStorage.getItem("upem-token");
+    }
+
+    return this.$config.token;
+  }
+
+  tryVaultAuth(): void {
     if (this.$config.scope === UPEMSDK_VAULT) {
       this._post("handshake", null);
     }
   }
 
-  getUser(callback: (data: Object, err: string) => void) {
-    if (!this.$config.token) throw new Error("config.token is undefined. User is maybe not connected yet");
+  getUser(callback: (data: Object, err: string) => void): void {
+    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");
     this._ajax("/me", callback);
   }
 
-  getLdapUser(callback: (data: Object, err: string) => void) {
-    if (!this.$config.token) throw new Error("config.token is undefined. User is maybe not connected yet");  
+  getLdapUser(callback: (data: Object, err: string) => void): void {
+    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");  
     this._ajax("/me/ldap", callback);
   }
 
-  getDayEvents(callback: (data: Object, err: string) => void) {
-    if (!this.$config.token) throw new Error("config.token is undefined. User is maybe not connected yet");  
+  getDayEvents(callback: (data: Object, err: string) => void): void {
+    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");  
 
     var curr: Date = new Date();
     var date: string = (curr.getMonth() + 1) + "/" + curr.getDate() + "/" + curr.getFullYear();
@@ -162,8 +159,8 @@ class UPEMSDK {
     this._ajax("/calendar/events" + "?date=" + date + "detail=" + 7, callback);
   }
 
-  getWeekEvents(callback: (data: Object, err: string) => void) {
-    if (!this.$config.token) throw new Error("config.token is undefined. User is maybe not connected yet");  
+  getWeekEvents(callback: (data: Object, err: string) => void): void {
+    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");  
 
     var c: Date = new Date();
     var f: Date = new Date(c.getFullYear(), c.getMonth(), c.getDate() + (c.getDay() == 0 ? -6 : 1) - c.getDay());

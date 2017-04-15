@@ -1,22 +1,29 @@
 <html>
   <head>
     <title>UPEM-SDK - Calendar Demo</title>
+    <style>
+    #upem-connect {
+      width: 145px;
+      height: 35px;
+      border: none;
+    }  
+    </style>
   </head>
   <body>
-    <iframe id="upem-connect"></iframe>
+    <iframe id="upem-connect" frameborder="0" src="http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u/connect"></iframe>
     
     <script src="../dist/sdk.min.js"></script>
     <script>
       function callback(events, err) {
-        console.log(events.data);
+        console.log(events.data, err);
       }
       
       var sdk = new UPEMSDK({
         baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/u",
-        scope: UPEMSDK_API,
-        iframe: "upem-connect",
         debug: true
       });
+
+      sdk.isApi();
 
       sdk.onConnect(function() {
         sdk.getWeekEvents(callback);
