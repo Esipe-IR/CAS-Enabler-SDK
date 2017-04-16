@@ -43,7 +43,7 @@ var UPEMSDK = (function () {
                 return self._debug("=> Event Message (ERROR)", event);
             }
             if (msg.src == document.URL) {
-                return;
+                return self._debug("<= Event Message (SEND)", msg);
             }
             self._debug("=> Event Message (RECEIVE)", msg);
             if (typeof self._f[msg.type] === "function") {
@@ -103,12 +103,12 @@ var UPEMSDK = (function () {
         x.setRequestHeader("Token", this.getToken());
         x.send();
     };
-    UPEMSDK.prototype._post = function (type, data) {
+    UPEMSDK.prototype._post = function (type, data, src) {
         var msg = {
             type: type,
             code: 0,
             scope: this._c.scope,
-            src: document.URL,
+            src: src ? src : document.URL,
             data: data,
             error: null
         };
@@ -169,7 +169,7 @@ var UPEMSDK = (function () {
         if (typeof token === "undefined") {
             token = this.getToken();
         }
-        this._post(ACTIONS.RCV_CONNECT, token);
+        this._post(ACTIONS.RCV_CONNECT, token, "CORE");
     };
     UPEMSDK.prototype.disconnect = function () {
         this._post(ACTIONS.RCV_DISCONNECT, null);

@@ -25,7 +25,7 @@ export declare class UPEMSDK {
     _receiveDefault(msg: PostMessage): void;
     _debug(action: string, extra: any): void;
     _ajax(uri: string, callback: (obj: PostMessage, err: String) => void): void;
-    _post(type: string, data: any): void;
+    _post(type: string, data: any, src?: string): void;
     _checkIfConnect(): void;
     _isValid(msg: PostMessage): boolean;
     _setToken(token: string): void;

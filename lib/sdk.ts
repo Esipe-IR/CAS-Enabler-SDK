@@ -75,7 +75,7 @@ export class UPEMSDK {
       }
 
       if (msg.src == document.URL) {
-        return;
+        return self._debug("<= Event Message (SEND)", msg);
       }
 
       self._debug("=> Event Message (RECEIVE)", msg);
@@ -154,12 +154,12 @@ export class UPEMSDK {
     x.send();
   }
 
-  _post(type: string, data: any): void {
+  _post(type: string, data: any, src?: string): void {
     var msg: PostMessage = {
       type: type,
       code: 0,
       scope: this._c.scope,
-      src: document.URL,
+      src: src ? src : document.URL,
       data: data,
       error: null
     }
@@ -287,7 +287,7 @@ export class UPEMSDK {
       token = this.getToken();
     }
 
-    this._post(ACTIONS.RCV_CONNECT, token);
+    this._post(ACTIONS.RCV_CONNECT, token, "CORE");
   }
 
   /**
