@@ -103,6 +103,12 @@ export class UPEMSDK {
   }
 
   _receiveDefault(msg: PostMessage): void {
+    if (Array.isArray(this._callback[msg.type])) {
+      return this._callback[msg.type].forEach(el => {
+        el(msg);
+      });
+    }
+
     if (typeof this._callback[msg.type] === "function") {
       return this._callback[msg.type](msg);
     }
@@ -199,8 +205,12 @@ export class UPEMSDK {
    * 
    * @memberOf UPEMSDK
    */
-  onConnect(callback: (data: PostMessage) => void, force: boolean): void {
-    this._callback[ACTIONS.RCV_CONNECT] = callback;
+  onConnect(callback: (msg: PostMessage) => void, force: boolean): void {
+    if (!this._callback[ACTIONS.RCV_CONNECT]) {
+      this._callback[ACTIONS.RCV_CONNECT] = [];
+    }
+
+    this._callback[ACTIONS.RCV_CONNECT].push(callback);
     if (force && this.getToken()) this.connect();
   }
 
@@ -211,8 +221,12 @@ export class UPEMSDK {
    * 
    * @memberOf UPEMSDK
    */
-  onDisconnect(callback: () => void): void {
-    this._callback[ACTIONS.RCV_DISCONNECT] = callback; 
+  onDisconnect(callback: (msg: PostMessage) => void): void {
+    if (!this._callback[ACTIONS.RCV_DISCONNECT]) {
+      this._callback[ACTIONS.RCV_DISCONNECT] = [];
+    }
+
+    this._callback[ACTIONS.RCV_DISCONNECT].push(callback); 
   }
 
   /**

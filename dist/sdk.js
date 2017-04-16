@@ -65,6 +65,11 @@ var UPEMSDK = (function () {
         this._receiveDefault(msg);
     };
     UPEMSDK.prototype._receiveDefault = function (msg) {
+        if (Array.isArray(this._callback[msg.type])) {
+            return this._callback[msg.type].forEach(function (el) {
+                el(msg);
+            });
+        }
         if (typeof this._callback[msg.type] === "function") {
             return this._callback[msg.type](msg);
         }
@@ -137,12 +142,18 @@ var UPEMSDK = (function () {
             localStorage.setItem("upem-token", this._c.token);
     };
     UPEMSDK.prototype.onConnect = function (callback, force) {
-        this._callback[ACTIONS.RCV_CONNECT] = callback;
+        if (!this._callback[ACTIONS.RCV_CONNECT]) {
+            this._callback[ACTIONS.RCV_CONNECT] = [];
+        }
+        this._callback[ACTIONS.RCV_CONNECT].push(callback);
         if (force && this.getToken())
             this.connect();
     };
     UPEMSDK.prototype.onDisconnect = function (callback) {
-        this._callback[ACTIONS.RCV_DISCONNECT] = callback;
+        if (!this._callback[ACTIONS.RCV_DISCONNECT]) {
+            this._callback[ACTIONS.RCV_DISCONNECT] = [];
+        }
+        this._callback[ACTIONS.RCV_DISCONNECT].push(callback);
     };
     UPEMSDK.prototype.unregister = function (key) {
         this._callback[key] = null;

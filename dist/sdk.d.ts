@@ -29,8 +29,8 @@ export declare class UPEMSDK {
     _checkIfConnect(): void;
     _isValid(msg: PostMessage): boolean;
     _setToken(token: string): void;
-    onConnect(callback: (data: PostMessage) => void, force: boolean): void;
-    onDisconnect(callback: () => void): void;
+    onConnect(callback: (msg: PostMessage) => void, force: boolean): void;
+    onDisconnect(callback: (msg: PostMessage) => void): void;
     unregister(key: string): void;
     unregisterOnConnect(): void;
     unregisterOnDisconnect(): void;
