@@ -1,8 +1,8 @@
 export interface Config {
   baseURL: string;
   scope: string;
-  token: string;
-  debug: boolean;
+  token?: string;
+  debug?: boolean;
 };
 
 export interface PostMessage {
