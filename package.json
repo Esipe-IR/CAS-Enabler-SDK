@@ -3,6 +3,7 @@
   "version": "3.0.2",
   "description": "UPEM javascript SDK for UPEM-Core, UPEM-Vault...",
   "main": "index.js",
+  "typings": "./dist/sdk.d.ts",
   "directories": {
     "example": "examples"
   },
@@ -18,8 +19,8 @@
     "SDK",
     "JS"
   ],
-  "author": "Vincent Rasquier",
-  "license": "ISC",
+  "author": "vincent.rsbs@gmail.com",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Esipe-IR/UPEM-SDK/issues"
   },

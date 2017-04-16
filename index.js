@@ -1,1 +1,1 @@
-module.exports = require('./dist/sdk.min.js');
+module.exports = require('./dist/sdk.npm.min.js');

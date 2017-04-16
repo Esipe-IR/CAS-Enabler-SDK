@@ -1,11 +1,11 @@
-interface Config {
+export interface Config {
   baseURL: string;
   scope: string;
   token: string;
   debug: boolean;
 };
 
-interface PostMessage {
+export interface PostMessage {
   type: string;
   code: number;
   scope: string;
@@ -14,8 +14,8 @@ interface PostMessage {
   error: string;
 };
 
-const UPEMSDK_API:string = "UPEM-Api";
-const UPEMSDK_VAULT: string = "UPEM-Vault";
+export const UPEMSDK_API:string = "UPEM-Api";
+export const UPEMSDK_VAULT: string = "UPEM-Vault";
 
 const ACTIONS: any = {
   RCV_DEFAULT: "receiveDefault",
@@ -25,7 +25,7 @@ const ACTIONS: any = {
   RESET: "askReset"
 };
 
-class UPEMSDK {
+export class UPEMSDK {
   private _c: Config;
   private _f: Object;
   private _callback: Object;
@@ -361,3 +361,7 @@ class UPEMSDK {
     this._ajax("/calendar/events?startDate=" + start + "&endDate=" + end, callback);
   }
 }
+
+window["UPEMSDK"] = UPEMSDK;
+window["UPEMSDK_API"] = UPEMSDK_API;
+window["UPEMSDK_VAULT"] = UPEMSDK_VAULT;

@@ -1,7 +1,8 @@
+"use strict";
 ;
 ;
-var UPEMSDK_API = "UPEM-Api";
-var UPEMSDK_VAULT = "UPEM-Vault";
+exports.UPEMSDK_API = "UPEM-Api";
+exports.UPEMSDK_VAULT = "UPEM-Vault";
 var ACTIONS = {
     RCV_DEFAULT: "receiveDefault",
     RCV_CONNECT: "receiveConnect",
@@ -10,12 +11,6 @@ var ACTIONS = {
     RESET: "askReset"
 };
 var UPEMSDK = (function () {
-    /**
-     * Creates an instance of UPEMSDK.
-     * @param {Config} userConfig
-     *
-     * @memberOf UPEMSDK
-     */
     function UPEMSDK(userConfig) {
         var defaultConfig = {
             baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/core",
@@ -141,63 +136,23 @@ var UPEMSDK = (function () {
         else
             localStorage.setItem("upem-token", this._c.token);
     };
-    /**
-     * Listener on connect
-     *
-     * @param {(data: PostMessage) => void} callback
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.onConnect = function (callback, force) {
         this._callback[ACTIONS.RCV_CONNECT] = callback;
         if (force && this.getToken())
             this.connect();
     };
-    /**
-     * Listener on disconnect
-     *
-     * @param {() => void} callback
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.onDisconnect = function (callback) {
         this._callback[ACTIONS.RCV_DISCONNECT] = callback;
     };
-    /**
-     * Unregister listener by key
-     *
-     * @param {string} key
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.unregister = function (key) {
         this._callback[key] = null;
     };
-    /**
-     * Unregister on connect listener
-     *
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.unregisterOnConnect = function () {
         this.unregister(ACTIONS.RCV_CONNECT);
     };
-    /**
-     * Unregister on disconnect listener
-     *
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.unregisterOnDisconnect = function () {
         this.unregister(ACTIONS.RCV_DISCONNECT);
     };
-    /**
-     * Get Token
-     *
-     * @returns {string}
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.getToken = function () {
         if (!this._c.token) {
             var lStorage = localStorage.getItem("upem-token");
@@ -207,92 +162,40 @@ var UPEMSDK = (function () {
         }
         return this._c.token;
     };
-    /**
-     * Action - Reset vault
-     *
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.resetVault = function () {
         this._post(ACTIONS.RESET, null);
     };
-    /**
-     * Action - Connect
-     *
-     * @param {string} token
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.connect = function (token) {
         if (typeof token === "undefined") {
             token = this.getToken();
         }
         this._post(ACTIONS.RCV_CONNECT, token);
     };
-    /**
-     * Action - Disconnect
-     *
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.disconnect = function () {
         this._post(ACTIONS.RCV_DISCONNECT, null);
     };
-    /**
-     * Action - Ask connect
-     *
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.askConnect = function () {
         this._post(ACTIONS.CONNECT, null);
     };
-    /**
-     * Ajax - Get user
-     *
-     * @param {(data: PostMessage, err: string) => void} callback
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.getUser = function (callback) {
         this._checkIfConnect();
         this._ajax("/me", callback);
     };
-    /**
-     * Ajax - Get ldap user
-     *
-     * @param {(data: PostMessage, err: string) => void} callback
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.getLdapUser = function (callback) {
         this._checkIfConnect();
         this._ajax("/me/ldap", callback);
     };
-    /**
-     * Ajax - Get events for date
-     *
-     * @param {string} date
-     * @param {(data: PostMessage, err: string) => void} callback
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.getEventsForDate = function (date, callback) {
         this._checkIfConnect();
         this._ajax("/calendar/events?date=" + date, callback);
     };
-    /**
-     * Ajax - Get events for range
-     *
-     * @param {string} start
-     * @param {string} end
-     * @param {(data: PostMessage, err: string) => void} callback
-     *
-     * @memberOf UPEMSDK
-     */
     UPEMSDK.prototype.getEventsForRange = function (start, end, callback) {
         this._checkIfConnect();
         this._ajax("/calendar/events?startDate=" + start + "&endDate=" + end, callback);
     };
     return UPEMSDK;
 }());
+exports.UPEMSDK = UPEMSDK;
+window["UPEMSDK"] = UPEMSDK;
+window["UPEMSDK_API"] = exports.UPEMSDK_API;
+window["UPEMSDK_VAULT"] = exports.UPEMSDK_VAULT;
