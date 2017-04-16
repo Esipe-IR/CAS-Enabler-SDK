@@ -1,85 +1,156 @@
-const UPEMSDK_API:string = "UPEM-Api";
-const UPEMSDK_VAULT: string = "UPEM-Vault";
-
 interface Config {
   baseURL: string;
   scope: string;
   token: string;
   debug: boolean;
-}
+};
 
 interface PostMessage {
   type: string;
   code: number;
   scope: string;
+  src: string;
   data: any;
-  error: any;
-}
+  error: string;
+};
+
+const UPEMSDK_API:string = "UPEM-Api";
+const UPEMSDK_VAULT: string = "UPEM-Vault";
+
+const ACTIONS: any = {
+  RCV_DEFAULT: "receiveDefault",
+  RCV_CONNECT: "receiveConnect",
+  RCV_DISCONNECT: "receiveDisconnect",
+  CONNECT: "askConnect",
+  RESET: "askReset"
+};
 
 class UPEMSDK {
-  $config: Config;
-  $callback: Object;
+  private _c: Config;
+  private _f: Object;
+  private _callback: Object;
 
+  /**
+   * Creates an instance of UPEMSDK.
+   * @param {Config} userConfig 
+   * 
+   * @memberOf UPEMSDK
+   */
   constructor(userConfig: Config) {
-    var defaultConfig: Config = {
+    let defaultConfig: Config = {
       baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/core",
       scope: null,
       token: null,
       debug: false
     }
 
-    this.$config = (<any>Object).assign(defaultConfig, userConfig);
-    this.$callback = {};
+    let c: Config = (<any>Object).assign(defaultConfig, userConfig);
+    this._c = (<any>Object).freeze(c);
 
-    this._setupListener();
+    this._setupReceiver();
     this._debug("INIT", this);
   }
 
-  _setupListener(): void {
+  _setupReceiver(): void {
     var self: UPEMSDK = this;
 
-    window.addEventListener("message", function(event) {
-      if (!event.data || !event.data.type || event.data.scope !== self.$config.scope) {
+    this._callback = {};
+    this._f = {
+      [ACTIONS.RCV_CONNECT]: function(msg: PostMessage) {
+        self._receiveConnect(msg);
+      },
+      [ACTIONS.RCV_DISCONNECT]: function(msg: PostMessage) {
+        self._receiveDisconnect(msg);
+      },
+      [ACTIONS.RCV_DEFAULT]: function(msg: PostMessage) {
+        self._receiveDefault(msg);
+      }
+    };
+
+    window.addEventListener("message", function(event: MessageEvent) {
+      let msg: PostMessage = event.data;
+
+      if (!msg || !msg.type || msg.scope !== self._c.scope) {
         return self._debug("=> Event Message (ERROR)", event);
       }
 
-      self._debug("=> Event Message (RECEIVE)", event);
-      self._debug("=> Event Message (DATA)", event.data);
-
-      if (typeof self.$callback[event.data.type] === "function") {
-        self.$callback[event.data.type](event.data);
+      if (msg.src == document.URL) {
+        return;
       }
+
+      self._debug("=> Event Message (RECEIVE)", msg);
+
+      if (typeof self._f[msg.type] === "function") {
+        return self._f[msg.type](msg);
+      }
+
+      self._debug("** Type is not a valid function", {type: msg.type, f: self._f});
+      self._f[ACTIONS.RCV_DEFAULT](msg);
     });
   }
 
+  _receiveConnect(msg: PostMessage): void {
+    if (this._isValid(msg)) {
+      this._setToken(msg.data);
+    }
+
+    this._receiveDefault(msg);
+  }
+
+  _receiveDisconnect(msg: PostMessage): void {
+    this._setToken(null);
+    this._receiveDefault(msg);
+  }
+
+  _receiveDefault(msg: PostMessage): void {
+    if (typeof this._callback[msg.type] === "function") {
+      return this._callback[msg.type](msg);
+    }
+    
+    this._debug("** Type is not a valid callback", {type: msg.type, callback: this._callback});
+  }
+
   _debug(action: string, extra: any): void {
-    if (this.$config.debug) {
+    if (this._c.debug) {
       console.log("UPEM SDK", " - " + action + " - ", extra);
     }
   }
 
-  _ajax(uri: string, callback: (obj: Object, err: String) => void): void {
+  _ajax(uri: string, callback: (obj: PostMessage, err: String) => void): void {
     var x: XMLHttpRequest = new XMLHttpRequest(); 
 
-    var url: string = this.$config.baseURL + "/api" + uri;
+    var url: string = this._c.baseURL + "/api" + uri;
     var self: UPEMSDK = this;
+
+    this._debug("___ AJAX Request", {url: url, token: this.getToken()});
 
     x.responseType = 'json';
     x.onreadystatechange = function (oEvent) {
-      if (x.readyState === 4) {
-        if (x.status === 200) {
-          self._debug("AJAX Success", x.response);
-          callback(x.response, null);
-        } else {
-          self._debug("AJAX Error", x.statusText);
-          callback(null, x.statusText);
-        }
+      if (x.readyState !== 4) {
+        return;
       }
-    }
 
-    this._debug("AJAX Request", {url: url, token: this.getToken()});
+      let err: string = x.statusText;
+
+      if (x.status === 200) {
+        if (self._isValid(x.response)) {
+          self._debug("___ AJAX Success", x.response);
+          return callback(x.response, null);
+        }
+
+        if (x.response.code === 4) {
+          self.disconnect();
+        }
+
+        err = x.response.error;
+      }
+        
+      self._debug("___ AJAX Error", x.response);
+      callback(null, err);
+    }
+    
     x.open("GET", url);
-    x.setRequestHeader('token', this.getToken());
+    x.setRequestHeader("Token", this.getToken());
     x.send();
   }
 
@@ -87,7 +158,8 @@ class UPEMSDK {
     var msg: PostMessage = {
       type: type,
       code: 0,
-      scope: this.$config.scope,
+      scope: this._c.scope,
+      src: document.URL,
       data: data,
       error: null
     }
@@ -95,80 +167,197 @@ class UPEMSDK {
     window.postMessage(msg, "*");
   }
 
-  _reset(): void {
-    if (this.$config.scope === UPEMSDK_VAULT) {
-      this._post("reset", null);
-    }
-  }
-
-  isApi(): void {
-    this.$config.scope = UPEMSDK_API;
-  }
-
-  isVault(): void {
-    this.$config.scope = UPEMSDK_VAULT;
-  }
-
-  onConnect(callback: (data: PostMessage) => void): void {
-    var self: UPEMSDK = this;
-
-    this.$callback["receiveToken"] = function(data: PostMessage) {
-      if (data.error === null && data.code === 0) {
-        self.setToken(data.data);
-      }
-
-      callback(data);
-    };
-  }
-
-  setToken(token: string): void {
-    this.$config.token = token;
-    localStorage.setItem("upem-token", token);
-  }
-
-  getToken(): string {
-    if (!this.$config.token) {
-      return localStorage.getItem("upem-token");
-    }
-
-    return this.$config.token;
-  }
-
-  tryVaultAuth(): void {
-    if (this.$config.scope === UPEMSDK_VAULT) {
-      this._post("handshake", null);
-    }
-  }
-
-  getUser(callback: (data: Object, err: string) => void): void {
+  _checkIfConnect(): void {
     if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");
+  }
+
+  _isValid(msg: PostMessage) {
+    if (msg.error === null && msg.code === 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  _setToken(token: string): void {
+    if (token === this._c.token) return;
+
+    let c = (<any>Object).assign({}, this._c, {
+      token: token
+    });
+
+    this._c = (<any>Object).freeze(c);
+
+    if (!token) localStorage.removeItem("upem-token");
+    else localStorage.setItem("upem-token", this._c.token);
+  }
+
+  /**
+   * Listener on connect
+   * 
+   * @param {(data: PostMessage) => void} callback 
+   * 
+   * @memberOf UPEMSDK
+   */
+  onConnect(callback: (data: PostMessage) => void, force: boolean): void {
+    this._callback[ACTIONS.RCV_CONNECT] = callback;
+    if (force && this.getToken()) this.connect();
+  }
+
+  /**
+   * Listener on disconnect
+   * 
+   * @param {() => void} callback 
+   * 
+   * @memberOf UPEMSDK
+   */
+  onDisconnect(callback: () => void): void {
+    this._callback[ACTIONS.RCV_DISCONNECT] = callback; 
+  }
+
+  /**
+   * Unregister listener by key
+   * 
+   * @param {string} key 
+   * 
+   * @memberOf UPEMSDK
+   */
+  unregister(key: string): void {
+    this._callback[key] = null;
+  }
+
+  /**
+   * Unregister on connect listener
+   * 
+   * 
+   * @memberOf UPEMSDK
+   */
+  unregisterOnConnect() {
+    this.unregister(ACTIONS.RCV_CONNECT);
+  }
+
+  /**
+   * Unregister on disconnect listener
+   * 
+   * 
+   * @memberOf UPEMSDK
+   */
+  unregisterOnDisconnect() {
+    this.unregister(ACTIONS.RCV_DISCONNECT);
+  }
+
+  /**
+   * Get Token
+   * 
+   * @returns {string} 
+   * 
+   * @memberOf UPEMSDK
+   */
+  getToken(): string {
+    if (!this._c.token) {
+      let lStorage = localStorage.getItem("upem-token");
+      
+      if (lStorage) {
+        this._setToken(lStorage);
+      }
+    }
+
+    return this._c.token;
+  }
+
+  /**
+   * Action - Reset vault
+   * 
+   * 
+   * @memberOf UPEMSDK
+   */
+  resetVault(): void {
+    this._post(ACTIONS.RESET, null);
+  }
+
+  /**
+   * Action - Connect
+   * 
+   * @param {string} token 
+   * 
+   * @memberOf UPEMSDK
+   */
+  connect(token?: string): void {
+    if (typeof token === "undefined") {
+      token = this.getToken();
+    }
+
+    this._post(ACTIONS.RCV_CONNECT, token);
+  }
+
+  /**
+   * Action - Disconnect
+   * 
+   * 
+   * @memberOf UPEMSDK
+   */
+  disconnect(): void {
+    this._post(ACTIONS.RCV_DISCONNECT, null);
+  }
+
+  /**
+   * Action - Ask connect
+   * 
+   * 
+   * @memberOf UPEMSDK
+   */
+  askConnect(): void {
+    this._post(ACTIONS.CONNECT, null);
+  }
+
+  /**
+   * Ajax - Get user
+   * 
+   * @param {(data: PostMessage, err: string) => void} callback 
+   * 
+   * @memberOf UPEMSDK
+   */
+  getUser(callback: (data: PostMessage, err: string) => void): void {
+    this._checkIfConnect();
     this._ajax("/me", callback);
   }
 
-  getLdapUser(callback: (data: Object, err: string) => void): void {
-    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");  
+  /**
+   * Ajax - Get ldap user
+   * 
+   * @param {(data: PostMessage, err: string) => void} callback 
+   * 
+   * @memberOf UPEMSDK
+   */
+  getLdapUser(callback: (data: PostMessage, err: string) => void): void {
+    this._checkIfConnect();
     this._ajax("/me/ldap", callback);
   }
 
-  getDayEvents(callback: (data: Object, err: string) => void): void {
-    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");  
-
-    var curr: Date = new Date();
-    var date: string = (curr.getMonth() + 1) + "/" + curr.getDate() + "/" + curr.getFullYear();
-
-    this._ajax("/calendar/events" + "?date=" + date + "detail=" + 7, callback);
+  /**
+   * Ajax - Get events for date
+   * 
+   * @param {string} date 
+   * @param {(data: PostMessage, err: string) => void} callback 
+   * 
+   * @memberOf UPEMSDK
+   */
+  getEventsForDate(date: string, callback: (data: PostMessage, err: string) => void): void {
+    this._checkIfConnect();
+    this._ajax("/calendar/events?date=" + date, callback);
   }
 
-  getWeekEvents(callback: (data: Object, err: string) => void): void {
-    if (!this.getToken()) throw new Error("config.token is undefined. User may not be connected yet");  
-
-    var c: Date = new Date();
-    var f: Date = new Date(c.getFullYear(), c.getMonth(), c.getDate() + (c.getDay() == 0 ? -6 : 1) - c.getDay());
-    var l: Date = new Date(c.getFullYear(), c.getMonth(), c.getDate() + (c.getDay() == 0 ? 0 : 7) - c.getDay());
-
-    var startDate: string = (f.getMonth() + 1) + "/" + f.getDate() + "/" + f.getFullYear();
-    var endDate: string = (l.getMonth() + 1) + "/" + l.getDate() + "/" + l.getFullYear();
-
-    this._ajax("/calendar/events" + "?startDate=" + startDate + "&endDate=" + endDate + "&detail=" + 7, callback);
+  /**
+   * Ajax - Get events for range
+   * 
+   * @param {string} start 
+   * @param {string} end 
+   * @param {(data: PostMessage, err: string) => void} callback 
+   * 
+   * @memberOf UPEMSDK
+   */
+  getEventsForRange(start: string, end: string, callback: (data: PostMessage, err: string) => void): void {
+    this._checkIfConnect();
+    this._ajax("/calendar/events?startDate=" + start + "&endDate=" + end, callback);
   }
 }

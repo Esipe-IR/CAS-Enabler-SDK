@@ -1,33 +1,50 @@
 <html>
   <head>
+    <meta charset="utf-8">
     <title>UPEM-SDK - API Demo</title>
     <style>
-    #upem-connect {
-      width: 145px;
-      height: 35px;
-      border: none;
-    }  
+      #upem-connect {
+        width: 145px;
+        height: 35px;
+        border: none;
+      }  
     </style>
   </head>
   <body>
+    <!-- Connect IFRAME -->
     <iframe id="upem-connect" src="http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/core/connect"></iframe>
     
+    <!-- SDK Library import -->
     <script src="../dist/sdk.min.js"></script>
+    
+    <!-- Your script -->
     <script>
-      function callback(user, err) {
-        console.log(user.data, err);
+      //Simple callback that log his params
+      function callback(msg, err) {
+        if (err !== null) {
+          console.log("ERROR", err);
+          return;
+        }
+
+        console.log("SUCCESS", msg.data);
       }
 
+      //SDK creation
       var sdk = new UPEMSDK({
         baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/core",
+        scope: UPEMSDK_API,
         debug: true
       });
-
-      sdk.isApi();
-
+    
+      //Setup a listener on connect and force instant connection
       sdk.onConnect(function() {
         sdk.getUser(callback);
         sdk.getLdapUser(callback);
+      }, true);
+
+      //Setup a listener on disconnect
+      sdk.onDisconnect(function() {
+        console.log("Disconnect");
       });
     </script>
   </body>
