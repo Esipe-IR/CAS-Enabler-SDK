@@ -1,21 +1,19 @@
 "use strict";
 ;
 ;
+;
 exports.UPEMSDK_API = "UPEM-Api";
 exports.UPEMSDK_VAULT = "UPEM-Vault";
-var ACTIONS = {
-    RCV_DEFAULT: "receiveDefault",
-    RCV_CONNECT: "receiveConnect",
-    RCV_DISCONNECT: "receiveDisconnect",
-    CONNECT: "askConnect",
-    RESET: "askReset"
-};
+var RCV_DEFAULT = "rcv::default";
+var RCV_CONNECT = "rcv::connect";
+var RCV_DISCONNECT = "rcv::disconnect";
+var ASK_CONNECT = "ask::connect";
+var ASK_RESET = "ask::reset";
 var UPEMSDK = (function () {
     function UPEMSDK(userConfig) {
         var defaultConfig = {
             baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/core",
             scope: null,
-            token: null,
             debug: false
         };
         var c = Object.assign(defaultConfig, userConfig);
@@ -27,13 +25,13 @@ var UPEMSDK = (function () {
         var self = this;
         this._callback = {};
         this._f = (_a = {},
-            _a[ACTIONS.RCV_CONNECT] = function (msg) {
+            _a[RCV_CONNECT] = function (msg) {
                 self._receiveConnect(msg);
             },
-            _a[ACTIONS.RCV_DISCONNECT] = function (msg) {
+            _a[RCV_DISCONNECT] = function (msg) {
                 self._receiveDisconnect(msg);
             },
-            _a[ACTIONS.RCV_DEFAULT] = function (msg) {
+            _a[RCV_DEFAULT] = function (msg) {
                 self._receiveDefault(msg);
             },
             _a);
@@ -50,26 +48,21 @@ var UPEMSDK = (function () {
                 return self._f[msg.type](msg);
             }
             self._debug("** Type is not a valid function", { type: msg.type, f: self._f });
-            self._f[ACTIONS.RCV_DEFAULT](msg);
+            self._f[RCV_DEFAULT](msg);
         });
         var _a;
     };
     UPEMSDK.prototype._receiveConnect = function (msg) {
         if (this._isValid(msg)) {
-            this._setToken(msg.data);
+            this.setToken(msg.data);
         }
         this._receiveDefault(msg);
     };
     UPEMSDK.prototype._receiveDisconnect = function (msg) {
-        this._setToken(null);
+        this.setToken(null);
         this._receiveDefault(msg);
     };
     UPEMSDK.prototype._receiveDefault = function (msg) {
-        if (Array.isArray(this._callback[msg.type])) {
-            return this._callback[msg.type].forEach(function (el) {
-                el(msg);
-            });
-        }
         if (typeof this._callback[msg.type] === "function") {
             return this._callback[msg.type](msg);
         }
@@ -119,9 +112,11 @@ var UPEMSDK = (function () {
         };
         window.postMessage(msg, "*");
     };
-    UPEMSDK.prototype._checkIfConnect = function () {
+    UPEMSDK.prototype._check = function (callback) {
         if (!this.getToken())
             throw new Error("config.token is undefined. User may not be connected yet");
+        if (typeof callback !== "function")
+            throw new Error("callback should be a function");
     };
     UPEMSDK.prototype._isValid = function (msg) {
         if (msg.error === null && msg.code === 0) {
@@ -129,80 +124,71 @@ var UPEMSDK = (function () {
         }
         return false;
     };
-    UPEMSDK.prototype._setToken = function (token) {
-        if (token === this._c.token)
-            return;
-        var c = Object.assign({}, this._c, {
-            token: token
-        });
-        this._c = Object.freeze(c);
-        if (!token)
-            localStorage.removeItem("upem-token");
-        else
-            localStorage.setItem("upem-token", this._c.token);
-    };
     UPEMSDK.prototype.onConnect = function (callback, force) {
-        if (!this._callback[ACTIONS.RCV_CONNECT]) {
-            this._callback[ACTIONS.RCV_CONNECT] = [];
-        }
-        this._callback[ACTIONS.RCV_CONNECT].push(callback);
+        this._callback[RCV_CONNECT] = callback;
         if (force && this.getToken())
             this.connect();
     };
     UPEMSDK.prototype.onDisconnect = function (callback) {
-        if (!this._callback[ACTIONS.RCV_DISCONNECT]) {
-            this._callback[ACTIONS.RCV_DISCONNECT] = [];
-        }
-        this._callback[ACTIONS.RCV_DISCONNECT].push(callback);
+        this._callback[RCV_DISCONNECT] = callback;
     };
     UPEMSDK.prototype.unregister = function (key) {
         this._callback[key] = null;
     };
     UPEMSDK.prototype.unregisterOnConnect = function () {
-        this.unregister(ACTIONS.RCV_CONNECT);
+        this.unregister(RCV_CONNECT);
     };
     UPEMSDK.prototype.unregisterOnDisconnect = function () {
-        this.unregister(ACTIONS.RCV_DISCONNECT);
+        this.unregister(RCV_DISCONNECT);
     };
     UPEMSDK.prototype.getToken = function () {
-        if (!this._c.token) {
-            var lStorage = localStorage.getItem("upem-token");
-            if (lStorage) {
-                this._setToken(lStorage);
-            }
-        }
-        return this._c.token;
+        return localStorage.getItem("upem-token");
+    };
+    UPEMSDK.prototype.setToken = function (token) {
+        if (!token)
+            localStorage.removeItem("upem-token");
+        else
+            localStorage.setItem("upem-token", token);
     };
     UPEMSDK.prototype.resetVault = function () {
-        this._post(ACTIONS.RESET, null);
+        this._post(ASK_RESET, null);
     };
     UPEMSDK.prototype.connect = function (token) {
         if (typeof token === "undefined") {
             token = this.getToken();
         }
-        this._post(ACTIONS.RCV_CONNECT, token, "CORE");
+        this._post(RCV_CONNECT, token, "CORE");
     };
     UPEMSDK.prototype.disconnect = function () {
-        this._post(ACTIONS.RCV_DISCONNECT, null);
+        this._post(RCV_DISCONNECT, null);
     };
     UPEMSDK.prototype.askConnect = function () {
-        this._post(ACTIONS.CONNECT, null);
+        this._post(ASK_CONNECT, null);
     };
     UPEMSDK.prototype.getUser = function (callback) {
-        this._checkIfConnect();
+        this._check(callback);
         this._ajax("/me", callback);
     };
     UPEMSDK.prototype.getLdapUser = function (callback) {
-        this._checkIfConnect();
+        this._check(callback);
         this._ajax("/me/ldap", callback);
     };
-    UPEMSDK.prototype.getEventsForDate = function (date, callback) {
-        this._checkIfConnect();
-        this._ajax("/calendar/events?date=" + date, callback);
-    };
-    UPEMSDK.prototype.getEventsForRange = function (start, end, callback) {
-        this._checkIfConnect();
-        this._ajax("/calendar/events?startDate=" + start + "&endDate=" + end, callback);
+    UPEMSDK.prototype.getEvents = function (ctx, callback) {
+        this._check(callback);
+        if (!ctx.resources) {
+            throw new Error("ctx.resources is required");
+        }
+        var uri = "/calendar/events?resources=" + ctx.resources;
+        if (ctx.date) {
+            uri += "&date=" + ctx.date;
+        }
+        if (ctx.startDate) {
+            uri += "&startDate=" + ctx.startDate;
+        }
+        if (ctx.endDate) {
+            uri += "&endDate=" + ctx.endDate;
+        }
+        this._ajax(uri, callback);
     };
     return UPEMSDK;
 }());
