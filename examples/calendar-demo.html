@@ -39,9 +39,13 @@
       //Setup a listener on connect and force instant connection
       sdk.onConnect(function() {
         var today = new Date();
-        var date = today.getMonth() + "/" + today.getDate() + "/" + today.getFullYear();
 
-        sdk.getEventsForDate(date, callback);
+        var ctx = {
+          resources: "1640",
+          date: today.getMonth() + "/" + today.getDate() + "/" + today.getFullYear()
+        }
+
+        sdk.getEvents(date, callback);
       }, true);
     </script>
   </body>
