@@ -1,6 +1,6 @@
 {
   "name": "upem-sdk",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "UPEM javascript SDK for UPEM-Core, UPEM-Vault...",
   "main": "index.js",
   "typings": "dist/sdk",
