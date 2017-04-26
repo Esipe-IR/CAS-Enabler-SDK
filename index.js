@@ -1,1 +1,1 @@
-module.exports = require('./dist/sdk.npm.min.js');
+module.exports = require('./dist/upem_sdk.npm.min.js');
