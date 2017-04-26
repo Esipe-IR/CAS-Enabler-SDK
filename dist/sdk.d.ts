@@ -11,40 +11,31 @@ export interface PostMessage {
     data: any;
     error: string;
 }
-export interface Context {
-    resources: string;
-    date?: string;
-    startDate?: string;
-    endDate?: string;
+export interface GraphMessage {
+    query: string;
+    variables?: string;
 }
-export declare const UPEMSDK_API: string;
-export declare const UPEMSDK_VAULT: string;
-export declare class UPEMSDK {
+export declare const API: string;
+export declare const VAULT: string;
+export declare class SDK {
     private _c;
     private _f;
     private _callback;
     constructor(userConfig: Config);
+    _log(action: string, extra: any): void;
     _setupReceiver(): void;
-    _receiveConnect(msg: PostMessage): void;
-    _receiveDisconnect(msg: PostMessage): void;
-    _receiveDefault(msg: PostMessage): void;
-    _debug(action: string, extra: any): void;
-    _ajax(uri: string, callback: (obj: PostMessage, err: String) => void): void;
-    _post(type: string, data: any, src?: string): void;
-    _check(callback: (data: PostMessage, err: string) => void): void;
     _isValid(msg: PostMessage): boolean;
-    onConnect(callback: (msg: PostMessage) => void, force: boolean): void;
-    onDisconnect(callback: (msg: PostMessage) => void): void;
+    _ajax(data: GraphMessage, callback: (msg) => void): void;
+    _createMsg(type: string, data?: any, code?: number, scope?: string, src?: string, error?: string): PostMessage;
+    _post(msg: PostMessage): void;
+    onToken(callback: (msg) => void): SDK;
+    token(): void;
     unregister(key: string): void;
-    unregisterOnConnect(): void;
-    unregisterOnDisconnect(): void;
+    unregisterOnToken(): void;
     getToken(): string;
     setToken(token: string): void;
     resetVault(): void;
-    connect(token?: string): void;
-    disconnect(): void;
     askConnect(): void;
-    getUser(callback: (data: PostMessage, err: string) => void): void;
-    getLdapUser(callback: (data: PostMessage, err: string) => void): void;
-    getEvents(ctx: Context, callback: (data: PostMessage, err: string) => void): void;
+    getGraph(graph: string, callback: (msg) => void): void;
+    getUser(callback: (msg) => void): void;
 }

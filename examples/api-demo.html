@@ -12,40 +12,31 @@
   </head>
   <body>
     <!-- Connect IFRAME -->
-    <iframe id="upem-connect" src="http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/core/connect"></iframe>
+    <iframe id="upem-connect" src="http://localhost/UPEM-Core/web/app_dev.php/~vrasquie/core/connect"></iframe>
     
     <!-- SDK Library import -->
-    <script src="../dist/sdk.min.js"></script>
+    <script src="../dist/upem_sdk.min.js"></script>
     
     <!-- Your script -->
     <script>
       //Simple callback that log his params
-      function callback(msg, err) {
-        if (err !== null) {
-          console.log("ERROR", err);
-          return;
-        }
-
-        console.log("SUCCESS", msg.data);
+      function callback(msg) {
+        console.log(msg);
       }
 
       //SDK creation
-      var sdk = new UPEMSDK({
-        baseURL: "http://localhost/UPEM-Api/web/app_dev.php/~vrasquie/core",
-        scope: UPEMSDK_API,
+      var sdk = new upemSdk.SDK({
+        baseURL: "http://localhost/UPEM-Core/web/app_dev.php/~vrasquie/core",
+        scope: upemSdk.API,
         debug: true
       });
     
-      //Setup a listener on connect and force instant connection
-      sdk.onConnect(function() {
-        sdk.getUser(callback);
-        sdk.getLdapUser(callback);
-      }, true);
-
-      //Setup a listener on disconnect
-      sdk.onDisconnect(function() {
-        console.log("Disconnect");
-      });
+      //Setup a listener on token and force instant checking (usefull when token already set)
+      sdk.onToken(function(token) {
+        if (token) {
+          sdk.getUser(callback);
+        }
+      }).token();
     </script>
   </body>
 </html>
