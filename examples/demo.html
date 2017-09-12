@@ -12,7 +12,7 @@
   </head>
   <body>
     <!-- Connect IFRAME -->
-    <iframe id="upem-connect" src="http://localhost/UPEM-Core/web/app_dev.php/~vrasquie/core/connect"></iframe>
+    <iframe id="upem-connect" src="https://perso-etudiant.u-pem.fr/~vrasquie/api/connect"></iframe>
     
     <!-- SDK Library import -->
     <script src="../dist/upem_sdk.min.js"></script>
@@ -25,18 +25,19 @@
       }
 
       //SDK creation
-      var sdk = new upemSdk.SDK({
-        baseURL: "http://localhost/UPEM-Core/web/app_dev.php/~vrasquie/core",
-        scope: upemSdk.API,
+      var sdk = new upem.UPEMSDK({
+        baseURL: "https://perso-etudiant.u-pem.fr/~vrasquie/api",
         debug: true
       });
     
-      //Setup a listener on token and force instant checking (usefull when token already set)
+      //Setup a listener on token
       sdk.onToken(function(token) {
         if (token) {
           sdk.getUser(callback);
         }
-      }).token();
+      });
+
+      sdk.getResource(17, 1643, callback);
     </script>
   </body>
 </html>
