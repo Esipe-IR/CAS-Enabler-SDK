@@ -24,6 +24,12 @@ export declare class UPEMSDK {
     log(action: string, extra: any): void;
     call(config: HttpConfig, callback: CALLBACK): void;
     getParams(query: string, variables?: Object): string;
+    getHttpConfig(params: string, headers?: any): {
+        url: string;
+        method: string;
+        params: string;
+        headers: any;
+    };
     onToken(callback: (msg) => void): void;
     getProjects(callback: CALLBACK): void;
     getResources(projectId: number, callback: CALLBACK): void;

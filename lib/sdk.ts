@@ -34,9 +34,9 @@ export class UPEMSDK {
 
   /**
    * Creates an instance of UPEMSDK.
-   * @param {Config} userConfig 
-   * 
-   * @memberOf UPEMSDK
+   *
+   * @param {Config} userConfig
+   * @memberof UPEMSDK
    */
   constructor(userConfig: Config) {
     const defaultConfig: Config = {
@@ -124,6 +124,22 @@ export class UPEMSDK {
   }
 
   /**
+   * Get HTTP Config
+   *
+   * @param {string} params
+   * @param {*} headers
+   * @memberof UPEMSDK 
+   */
+  getHttpConfig(params: string, headers?: any) {
+    return {
+      url: this.config.baseURL + GRAPH_URL,
+      method: METHOD.POST,
+      params: params,
+      headers: headers
+    };
+  }
+
+  /**
    * On token change
    *
    * @param {(msg) => void} callback
@@ -142,7 +158,6 @@ export class UPEMSDK {
    * @memberof UPEMSDK
    */
   getProjects(callback: CALLBACK) {
-    const url = this.config.baseURL + GRAPH_URL;
     const graph = `query {
       projects {
         id
@@ -152,14 +167,7 @@ export class UPEMSDK {
 
     const params = this.getParams(graph);
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 
   /**
@@ -170,7 +178,6 @@ export class UPEMSDK {
    * @memberof UPEMSDK
    */
   getResources(projectId: number, callback: CALLBACK) {
-    const url = this.config.baseURL + GRAPH_URL;
     const graph = `query($projectId: Int!) {
       resources(projectId: $projectId) {
         id
@@ -182,14 +189,7 @@ export class UPEMSDK {
       projectId
     });
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 
   /**
@@ -201,7 +201,6 @@ export class UPEMSDK {
    * @memberof UPEMSDK
    */
   getResource(projectId: number, id: number, callback: CALLBACK) {
-    const url = this.config.baseURL + GRAPH_URL;
     const graph = `query($projectId: Int!, $id: Int!) {
       resource(projectId: $projectId, id: $id) {
         id
@@ -215,14 +214,7 @@ export class UPEMSDK {
       id
     });
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 
   /**
@@ -241,7 +233,6 @@ export class UPEMSDK {
     endDate: string,
     callback: CALLBACK
   ) {
-    const url = this.config.baseURL + GRAPH_URL;
     const graph = `query($projectId: Int!, $id: Int!, $startDate: String!, $endDate: String!) {
       resource(projectId: $projectId, id: $id) {
         id
@@ -268,14 +259,7 @@ export class UPEMSDK {
       endDate
     });
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 
   /**
@@ -295,7 +279,6 @@ export class UPEMSDK {
     endDate: string,
     callback: CALLBACK
   ) {
-    const url = this.config.baseURL + GRAPH_URL;
     const graph = `query(
       $projectId: Int!,
       $resource: Int!,
@@ -327,14 +310,7 @@ export class UPEMSDK {
       endDate
     });
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 
   /**
@@ -344,7 +320,6 @@ export class UPEMSDK {
    * @memberof UPEMSDK
    */
   getUser(callback: CALLBACK) {
-    const url = this.config.baseURL + GRAPH_URL;
     const graph = `query {
       user {
         uid
@@ -353,15 +328,7 @@ export class UPEMSDK {
 
     const params = this.getParams(graph);
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params,
-        headers: {}
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 
   /**
@@ -376,13 +343,6 @@ export class UPEMSDK {
     const url = this.config.baseURL + GRAPH_URL;
     const params = this.getParams(graph, variables);
 
-    this.call(
-      {
-        url: url,
-        method: METHOD.POST,
-        params: params
-      },
-      callback
-    );
+    this.call(this.getHttpConfig(params), callback);
   }
 }
